@@ -71,24 +71,12 @@ async function ShowClanInfo(tag) {
 }
 */
 
-async function getCwlCurrentSeason(clanTag) {
-  try {
-    const response = await clashKingClient.get(`/cwl/${clanTag}/group`);
-    console.log("Info gruppo CWL:", response.data);
-    return response.data;
-  } catch (error) {
-    console.error(
-      "Errore nel recupero dati della CWL:" + "\n ERROR MSG =",
-      error.response?.data || error.message
-    );
-  }
-}
-
 async function getCurrentSeasonCWLWarTags(clanTag) {
   try {
     //gets API data
     let response = await clashKingClient.get(`/cwl/${clanTag}/group`);
     let cwlData = response.data;
+    //console.log("Info gruppo CWL:", cwlData);
 
     let allWarTags = [];
 
@@ -124,7 +112,7 @@ async function getWarData(warTag) {
       `/clanwarleagues/wars/${transformTag(warTag)}`
     );
     let warData = response.data;
-    //console.log("Dati della War "+ warTag, warData);
+    //console.log("Dati della War " + warTag, warData);
     return warData;
   } catch (error) {
     console.error(
@@ -141,30 +129,54 @@ async function warFilter(clanTag) {
   let allSeasonWarTags = await getCurrentSeasonCWLWarTags(clanTag);
   //console.log('clantag to find: '+clanTag)
 
-  let clanTagToMatch = "#" + clanTag;
-  //console.log('clantag to match: '+clanTagToMatch)
+  try {
+    let clanTagToMatch = "#" + clanTag;
+    //console.log('clantag to match: '+clanTagToMatch)
 
-  // Iteration on every round (che è un oggetto)
-  for (let round of allSeasonWarTags) {
-    //console.log(`Processing round ${round.roundNumber}`);
+    // Iteration on every round (che è un oggetto)
+    for (let round of allSeasonWarTags) {
+      //console.log(`Processing round ${round.roundNumber}`);
 
-    // Iteration of concurrent round
-    for (let warTag of round.warTags) {
-      //console.log(warTag)
-      let warData = await getWarData(warTag);
+      // Iteration of concurrent round
+      for (let warTag of round.warTags) {
+        //console.log(warTag)
+        let war = await getWarData(warTag);
 
-      //if clanTag is found inside the war, the data of the war is saved in correctClanWars
-      if (
-        warData.clan.tag === clanTagToMatch ||
-        warData.opponent.tag === clanTagToMatch
-      ) {
-        //console.log("clan found in war: "+warTag)
-        correctClanWars.push(warData);
-        break; // Go to next round
+        //if clanTag is found inside the war, the data of the war is saved in correctClanWars
+        if (
+          war.clan.tag === clanTagToMatch ||
+          war.opponent.tag === clanTagToMatch
+        ) {
+          //console.log("clan found in war: "+warTag)
+          //creates an object that contains the correct war data and the war tag
+          let warData = {
+            warTag: warTag,
+            war: war,
+          };
+          correctClanWars.push(warData);
+          break; // Go to next round
+        }
       }
     }
+  } catch (error) {
+    console.error("Errore durante il filtraggio delle guerre:", error);
+    return [];
   }
+
   return correctClanWars;
+}
+
+async function savePlayerData(clanTag) {
+  let correctClanWars = await correctClanWars(clanTag);
+
+  try {
+  } catch (error) {
+    console.error(
+      "Errore durante il salvataggio dei dati dei giocatori:",
+      error
+    );
+    return [];
+  }
 }
 
 //input tag without '#', output encoded tag with #
@@ -194,8 +206,16 @@ function warTagsToString(warTagsData) {
   return result;
 }
 
-function correctClanWarsToString(CorrectClanWars) {
+function correctClanWarsToString(correctClanWars) {
   let result = "=== Correct Clan Wars ===\n";
+
+  for (let i = 0; i < correctClanWars.length; i++) {
+    let warData = correctClanWars[i];
+    result += `Guerra ${i + 1} (${warData.warTag}):\n`;
+    result += `  Clan: ${warData.war.clan.name} (${warData.war.clan.tag}) vs ${warData.war.opponent.name} (${warData.war.opponent.tag})\n`;
+  }
+
+  return result;
 }
 
 async function main() {
@@ -203,5 +223,6 @@ async function main() {
   //console.log(warTagsToString(warTagsData))
 
   let correctClanWars = await warFilter(C_ItalianArmyTag);
+  console.log(correctClanWarsToString(correctClanWars));
 }
 main();

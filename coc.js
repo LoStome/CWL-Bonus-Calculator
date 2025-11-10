@@ -51,7 +51,8 @@ async function showPlayerInfo(playerTag) {
 
     console.log("player tag passato= "+playerTag)
   try {
-    const response = await officialCocClient.get(`/players/${playerTag}`);
+    //transformo il tag perche' uso l'API UFFICIALE
+    const response = await officialCocClient.get(`/players/${transformTag(playerTag)}`);
     console.log("Player CoC API Ufficiale:", response.data);
     return response.data;
   } catch (error) {
@@ -95,11 +96,17 @@ async function getCurrentSeasonCWLWarTags(clanTag) {
 
         cwlData.data.rounds.forEach(function(round, roundIndex) {
 
-            //Creates an Object for each round with its WarTags in it
+            //Creates an object for each round with its WarTags in it
             let roundData = {
                 roundNumber: roundIndex + 1,
-                //#0 are invalid war for CoC's API, so they are filtered out
-                warTags: round.warTags.filter(warTag => warTag && warTag !== '#0')
+                
+                //warTags: round.warTags.filter(warTag => warTag && warTag !== '#0')
+                warTags: round.warTags
+                        //#0 are invalid war for CoC's API, so they are filtered out
+                        .filter(warTag => warTag && warTag !== '#0')
+                        // removes # to standardize all tags
+                        .map(warTag => warTag.replace('#', ''))
+                
             };
             //console.log("Round creato:", roundData.roundNumber); 
             allWarTags.push(roundData);
@@ -114,18 +121,54 @@ async function getCurrentSeasonCWLWarTags(clanTag) {
 //Ritorna i dati della war con war tag associato
 async function getWarData(warTag) {
     try {
-        //let clanTagOF = "#"+C_ItalianArmyTag 
-        let response = await officialCocClient.get(`/clanwarleagues/wars/${warTag}`);
+        //transformo il tag perche' uso l'API UFFICIALE
+        let response = await officialCocClient.get(`/clanwarleagues/wars/${transformTag(warTag)}`);
         let warData = response.data; 
-        console.log("Dati della War"+ warTag, warData);
+        console.log("Dati della War "+ warTag, warData);
         return warData
     } catch (error) {
          console.error("Errore nel recupero dati della War "+ warTag+"\n ERROR MSG =", error.response?.data || error.message);
     }
 }
 
+//filters all the wars of the CWL season to find the ones with the correspondent CLAN TAG
+//returns an array which contains the wars battled by the clan in the season
+async function warFilter(clanTag) {
+    let TaggedClanWars = []
+    let allSeasonWarTags = await getCurrentSeasonCWLWarTags(clanTag)
+
+        // Itera su ogni round (che è un oggetto)
+    for (let round of allSeasonWarTags) {
+        console.log(`Processando round ${round.roundNumber}`);
+            
+        // Itera sui warTags del round corrente
+        for (let warTag of round.warTags) {
+            console.log(warTag)
+            let war = await getWarData(warTag);
+        }
+    }
+}
+    
+    /*forEach.round{
+        for each wartag{
+            let war = getWarData(wartag)
+            
+            if (war.clan.tag || war.opponent.tag)==clanTag) {   
+                taggedClanWars.push(warData)
+                break // breaks the cycle and goes to the next round
+            }
+        }
+    }
+    return taggedClanWars
+    */  
+
+
+
+
+
 //input tag without '#', output encoded tag with #
 //the output is used for the official CoC API
+//in this way the tag can always be passed in it's normal form and then converted for each function if needed
 function transformTag(tag){
     let transformedTag = encodeURIComponent('#' + tag)
     return transformedTag
@@ -153,19 +196,15 @@ function warTagsToString(warTagsData) {
 
 
 async function main() {
+  warFilter(C_ItalianArmyTag)
+  //getWarData('8QQVQ9LR2') 
 
-    let warTagsData = await getCurrentSeasonCWLWarTags(C_ItalianArmyTag);
-    console.log(warTagsToString(warTagsData))
+
+  //let warTagsData = await getCurrentSeasonCWLWarTags(C_ItalianArmyTag);
+  //console.log(warTagsToString(warTagsData))
     
-
-    getWarData(transformTag('8QR02GGCY'))
 }
 main()
 
 //chiamate di prova
-//showPlayerInfo(transformTag(P_Lore))
-//ShowClanInfo(C_ItalianArmyTag)
-//GetCWLsTags(CWL_IAtag) 
-//getCwlCurrentSeason(C_ItalianArmyTag)
-
 

@@ -1,43 +1,5 @@
-// LIBRERIE
-require("dotenv").config();
-const axios = require("axios");
-//const clashApi = require('clashofclans.js')
 
-// API KEYS
-const COC_API_KEY = process.env.COC_API_TOKEN; //official CoC api
 
-// API URLs
-const CLASHKING_BASE_URL = "https://api.clashk.ing";
-const OFFICIAL_COC_API_URL = "https://api.clashofclans.com/v1/";
-
-//INSTANZE API
-//OFFICIAL COC API
-const officialCocClient = axios.create({
-  baseURL: OFFICIAL_COC_API_URL,
-  headers: {
-    Authorization: `Bearer ${COC_API_KEY}`,
-    Accept: "application/json",
-    "User-Agent": "CWL Bonus Calculator (Discord: lo_stome)",
-  },
-});
-
-//CLASH KING API
-//IMPORTANTE!
-//CLASH KING NON USA '#' NEI TAG
-const clashKingClient = axios.create({
-  baseURL: CLASHKING_BASE_URL,
-  headers: {
-    Accept: "application/json",
-    "User-Agent": "CWL Bonus Calculator (Discord: lo_stome)",
-  },
-});
-//FINE INSTANZE API
-
-// TAGS PER PRODUZIONE
-//note: i tag per l'API kings devono essere senza '#' mentre per l'API ufficiale devono comprendere "#" e poi essere codificate con encodeURIComponent(tag)
-const C_ItalianArmyTag = "2RPVPQLYJ";
-const P_Lore = "C0UUYY2R";
-const CWL_IAtag = "8QGGJQ8CY";
 
 //METODI DI PROVA
 //API UFFICIALE
@@ -102,23 +64,7 @@ async function getCurrentSeasonCWLWarTags(clanTag) {
   }
 }
 
-//Ritorna i dati della war con war tag associato
-async function getWarData(warTag) {
-  try {
-    //transformo il tag perche' uso l'API UFFICIALE
-    let response = await officialCocClient.get(
-      `/clanwarleagues/wars/${transformTag(warTag)}`
-    );
-    let warData = response.data;
-    //console.log("Dati della War " + warTag, warData);
-    return warData;
-  } catch (error) {
-    console.error(
-      "Errore nel recupero dati della War " + warTag + "\n ERROR MSG =",
-      error.response?.data || error.message
-    );
-  }
-}
+
 
 //filters all the wars of the CWL season to find the ones with the correspondent CLAN TAG
 //returns an array which contains the wars battled by the clan in the season
@@ -164,94 +110,7 @@ async function warFilter(clanTag) {
   return correctClanWars;
 }
 
-async function savedPlayerData(clanTag) {
-  let correctClanWars = await warFilter(clanTag);
-  let clanTagToMatch = "#" + clanTag;
-  //console.log('clantag to match: '+clanTagToMatch)
-  let clanMembers = [];
 
-  try {
-    //for each round
-    for (let i = 0; i < correctClanWars.length; i++) {
-      let warData = correctClanWars[i];
-
-      let members;
-      //console.log("\nWar N: " + (i + 1));
-      //checks which is the correct clan from where to save player data for this round
-      if (warData.war.clan.tag === clanTagToMatch) {
-        members = warData.war.clan.members;
-      } else {
-        members = warData.war.opponent.members;
-      }
-
-      //starts to save each player as an object
-      for (let j = 0; j < members.length; j++) {
-        let member = members[j];
-
-        let memberData = {
-          tag: member.tag,
-          name: member.name,
-          townhallLevel: member.townhallLevel,
-          mapPosition: member.mapPosition,
-          attacks: member.attacks || [],
-          /*
-          defences not implemented
-          opponentAttacks: member.opponentAttacks || 0,
-          bestOpponentAttack: member.bestOpponentAttack || null
-          */
-        };
-
-        // to checks if player already exists, saves member index
-        let existingIndex = clanMembers.findIndex(
-          (member) => member.tag === memberData.tag
-        );
-
-        //console.log("Player N " + (j + 1) + " = " + member.name);
-        //checks if the player already exists with it's tag
-        if (existingIndex === -1) {
-          //modifies the attacks property of memberData
-          memberData.attacks = (member.attacks || []).map((attack) => ({
-            ...attack, //copies attack properties
-            warTag: warData.warTag, //adds war's wartag
-            warNumber: i + 1, //adds war's number
-          }));
-          //adds player to the list
-          clanMembers.push(memberData);
-          /*console.log(
-            "New member added: " +
-              member.name +
-              ": added  " +
-              (member.attacks?.length || 0) +
-              " attacks\n"
-          );*/
-        } else {
-          //adds war attacks to the already added player
-          let attacksWithWarInfo = (member.attacks || []).map((attack) => ({
-            ...attack,
-            warTag: warData.warTag,
-            warNumber: i + 1,
-          }));
-
-          clanMembers[existingIndex].attacks.push(...attacksWithWarInfo);
-          /*
-          console.log(
-            "Already existing member, added " +
-              (member.attacks?.length || 0) +
-              " attacks\n"
-          );
-          */
-        }
-      }
-    }
-  } catch (error) {
-    console.error(
-      "Errore durante il salvataggio dei dati dei giocatori:",
-      error
-    );
-    return [];
-  }
-  return clanMembers;
-}
 
 //input tag without '#', output encoded tag with #
 //the output is used for the official CoC API

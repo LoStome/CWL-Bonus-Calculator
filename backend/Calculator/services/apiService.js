@@ -1,5 +1,5 @@
 const { officialCocClient, clashKingClient } = require("../config/api");
-const { transformTag } = require("../utils/tagUtils");
+const { transformTag, standardizeTag } = require("../utils/tagUtils");
 
 class ApiService {
   //OFFICIAL CoC API
@@ -68,8 +68,8 @@ class ApiService {
           warTags: round.warTags
             //#0 are invalid war for CoC's API, so they are filtered out
             .filter((warTag) => warTag && warTag !== "#0")
-            // removes # to standardize all tags
-            .map((warTag) => warTag.replace("#", "")),
+            //since tag is used, it gets standardized
+            .map((warTag) => standardizeTag(warTag)),
         };
         //console.log("Round created:", roundData.roundNumber);
         allWarTags.push(roundData);

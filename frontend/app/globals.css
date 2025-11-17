@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f01717;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+/*darkmode*/
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-clashNormal), sans-serif;
+}
+
+/*
+//global font
+.font-clashNormal {
+  font-family: var(--font-clashNormal);
+}
+*/
+
+.font-clashSmall {
+  font-family: var(--font-clashSmall);
+}

@@ -34,3 +34,7 @@ body {
 .font-clashSmall {
   font-family: var(--font-clashSmall);
 }
+
+.font-clashText {
+  font-family: var(--font-clashText);
+}

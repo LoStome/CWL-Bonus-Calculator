@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 
+//initialize express instance
 const app = express();
 
 // Middleware
@@ -37,8 +38,15 @@ module.exports = {
 };
 
 // ===== ROUTES =====
-const cwlRoutes = require("./routes/cwl");
-app.use("/api/cwl", cwlRoutes);
+const routes = {
+  "/api/cwl": require("./routes/cwl"),
+  "/api/clan": require("./routes/clan"),
+  "/api/player": require("./routes/player"),
+};
+
+Object.entries(routes).forEach(([path, router]) => {
+  app.use(path, router);
+});
 
 // ===== SERVER START =====
 const PORT = process.env.PORT || 5000;

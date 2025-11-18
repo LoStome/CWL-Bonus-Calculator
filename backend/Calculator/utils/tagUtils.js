@@ -4,6 +4,7 @@ function standardizeTag(tag) {
 
 function transformTag(tag) {
   if (tag.startsWith("#")) {
+    //remove all "#"
     tag = standardizeTag(tag);
   }
 

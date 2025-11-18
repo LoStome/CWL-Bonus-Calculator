@@ -1,14 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   const [tag, setTag] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("Clan tag:", tag);
+    const standardizedTag = tag.replace("#", "").toUpperCase();
+
+    router.push(`/clan/${standardizedTag}`);
 
     // Later you will use this:
     // const response = await fetch(`/api/clan?tag=${tag}`);
@@ -32,7 +36,7 @@ export default function HomePage() {
           type="text"
           value={tag}
           onChange={(e) => setTag(e.target.value)}
-          placeholder="#...."
+          placeholder="#..."
           className="text-[#9d9d9d] font-clashSmall w-full border p-3 rounded-lg mb-4 outline-none focus:ring-2 focus:ring-blue-400"
         />
 

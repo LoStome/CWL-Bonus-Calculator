@@ -3,19 +3,41 @@ const { transformTag, standardizeTag } = require("../utils/tagUtils");
 
 class ApiService {
   //OFFICIAL CoC API
-  async showPlayerInfo(playerTag) {
-    console.log("player tag passato= " + playerTag);
+  //returns the data of the player json
+  async getPlayerInfo(playerTag) {
+    //console.log("passed player tag= " + playerTag);
     try {
-      //tranform the tag because it's using official COC API
+      //tranforms the tag because it's using official COC API
       const response = await officialCocClient.get(
         `/players/${transformTag(playerTag)}`
       );
-      console.log("Player CoC API Ufficiale:", response.data);
+      //console.log("Player CoC API Ufficiale:", response.data);
       return response.data;
     } catch (error) {
       console.error(
         "Error, could not get the data of player: #" +
           playerTag +
+          ":\n ERROR MSG =",
+        error.response?.data || error.message
+      );
+    }
+  }
+
+  //returns the data of the clan (json)
+  async getClanInfo(clanTag) {
+    //console.log("passed clan tag= " + clanTag);
+    //console.log("transformed clan tag: " + transformTag(clanTag));
+    try {
+      //tranforms the tag because it's using official COC API
+      const response = await officialCocClient.get(
+        `/clans/${transformTag(clanTag)}`
+      );
+      //console.log("Player CoC API Ufficiale:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error, could not get the data of the clan: #" +
+          clanTag +
           ":\n ERROR MSG =",
         error.response?.data || error.message
       );
@@ -40,8 +62,8 @@ class ApiService {
   }
 
   //API CLASH KING
-
-  async ShowPlayerInfoKING(tag) {
+  //funzione di prova
+  async getPlayerInfoKINGS(tag) {
     try {
       let playerInfo = await clashKingClient.get(`/player/${tag}/stats`)(tag);
       console.log("(CLASH KING) this is the player info:", playerInfo);

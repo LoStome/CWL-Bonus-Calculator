@@ -1,4 +1,4 @@
-const { apiService, savedPlayerDataToString } = require("./Calculator");
+const { apiService, savedPlayerDataToString } = require(".");
 
 // TAGs for production
 //note: i tag per l'API kings devono essere senza '#' mentre per l'API ufficiale devono comprendere "#" e poi essere codificate con encodeURIComponent(tag)
@@ -16,4 +16,4 @@ async function main() {
   }
 }
 
-main();
+//main();

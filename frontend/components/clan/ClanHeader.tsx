@@ -8,6 +8,8 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import { ClanInfoSection } from "./ClanInfoSection";
 import { ClanWarStatsSection } from "./ClanWarStatsSection";
 
+import { useResponsiveBadgeSize } from "@/hooks/useBreakpoint";
+
 interface ClanHeaderProps {
   clanData: ClanData;
   title?: string;
@@ -17,8 +19,7 @@ export const ClanHeader: React.FC<ClanHeaderProps> = ({
   clanData,
   title = "Clan Info",
 }) => {
-  console.log("Tipo di badgeUrls:", typeof clanData.badgeUrls);
-  console.log("Contenuto di badgeUrls:", clanData.badgeUrls);
+  const badgeSize = useResponsiveBadgeSize();
 
   return (
     <Card>
@@ -31,7 +32,7 @@ export const ClanHeader: React.FC<ClanHeaderProps> = ({
             {clanData.tag}
           </p>
         </div>
-        <ClanBadge size="large" badgeUrls={clanData.badgeUrls} />
+        <ClanBadge size={badgeSize} badgeUrls={clanData.badgeUrls} />
       </div>
       <ClanDescription description={clanData.description} />
 

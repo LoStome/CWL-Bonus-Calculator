@@ -4,18 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 import { ClanData } from "@/components/clan/clan";
-import { ClanHeader, ClanInfoCard, ClanInfoSection } from "@/components/clan";
-import { Card } from "@/components/ui";
-
-interface ClanData {
-  tag: string;
-  name: string;
-  type: string;
-  description: string;
-  warLeague: { id: number; name: string };
-  members: number;
-  badgeUrls: { small: string; medium: string; large: string };
-}
+import { ClanHeader } from "@/components/clan";
 
 export default function ClanPage() {
   const params = useParams();
@@ -67,7 +56,8 @@ export default function ClanPage() {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-4xl mx-auto">
-        <ClanHeader clanData={clanData} />
+        <ClanHeader clanData={clanData!} />
+        {/*Type Assertion: Uses to tell js that the data is never null | if not done an error is shown in VScode*/}
       </div>
     </div>
   );

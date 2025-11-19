@@ -15,10 +15,11 @@ class ApiService {
       return response.data;
     } catch (error) {
       console.error(
-        "Error, could not get the data of player: #" +
-          playerTag +
-          ":\n ERROR MSG =",
+        "Error getting player data:",
         error.response?.data || error.message
+      );
+      throw new Error(
+        `Player API error: ${error.response?.data?.message || error.message}`
       );
     }
   }
@@ -36,10 +37,11 @@ class ApiService {
       return response.data;
     } catch (error) {
       console.error(
-        "Error, could not get the data of the clan: #" +
-          clanTag +
-          ":\n ERROR MSG =",
+        "Error getting clan data:",
         error.response?.data || error.message
+      );
+      throw new Error(
+        `Clan API error: ${error.response?.data?.message || error.message}`
       );
     }
   }
@@ -55,8 +57,11 @@ class ApiService {
       return warData;
     } catch (error) {
       console.error(
-        "Error, could not get the data of war: " + warTag + "\n ERROR MSG =",
+        "Error getting war data:",
         error.response?.data || error.message
+      );
+      throw new Error(
+        `War API error: ${error.response?.data?.message || error.message}`
       );
     }
   }
@@ -69,6 +74,9 @@ class ApiService {
       console.log("(CLASH KING) this is the player info:", playerInfo);
     } catch (error) {
       console.error(error);
+      throw new Error(
+        `Player API error: ${error.response?.data?.message || error.message}`
+      );
     }
   }
 
@@ -99,8 +107,11 @@ class ApiService {
       return allWarTags;
     } catch (error) {
       console.error(
-        "Error, could not get the data of the CWL:" + "\n ERROR MSG =",
+        "Error getting CWL data:",
         error.response?.data || error.message
+      );
+      throw new Error(
+        `CWL API error: ${error.response?.data?.message || error.message}`
       );
     }
   }

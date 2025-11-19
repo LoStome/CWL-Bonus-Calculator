@@ -9,25 +9,24 @@ router.get("/test", (req, res) => {
 });
 
 router.get("/clanData", async (req, res) => {
-  const { clanTag } = req.query;
-
-  if (!clanTag) {
-    return res.status(400).json({
-      ok: false,
-      error: "Missing clanTag parameter",
-    });
-  }
-
-  // saves all clan data in a constant
-  const clanData = await apiService.getClanInfo(clanTag);
-
-  //outputs the data structure as json
-  res.json({
-    ok: true,
-    clanData,
-  });
-
   try {
+    const { clanTag } = req.query;
+
+    if (!clanTag) {
+      return res.status(400).json({
+        ok: false,
+        error: "Missing clanTag parameter",
+      });
+    }
+
+    // saves all clan data in a constant
+    const clanData = await apiService.getClanInfo(clanTag);
+
+    //outputs the data structure as json
+    res.json({
+      ok: true,
+      data: clanData,
+    });
   } catch (error) {
     console.error("Error fetching clan data:", error);
     res.status(500).json({

@@ -24,17 +24,38 @@ body {
   font-family: var(--font-clashNormal), sans-serif;
 }
 
-/*
-//global font
-.font-clashNormal {
-  font-family: var(--font-clashNormal);
-}
-*/
-
 .font-clashSmall {
   font-family: var(--font-clashSmall);
 }
 
 .font-clashText {
   font-family: var(--font-clashText);
+}
+
+/* Stile testo Clash of Clans */
+.clash-style-text {
+  -webkit-text-stroke: 1px black;
+  /*color: white;*/
+  text-shadow: 0 2px 0 #000, 0 4px 0 #000, 0 6px 0 #000;
+}
+
+.clash-style-text-medium {
+  -webkit-text-stroke: 1px black;
+  /*color: white;*/
+  text-shadow: 0 1px 0 #000, 0 4px 0 #000;
+}
+
+.clash-style-text-small {
+  -webkit-text-stroke: 1px black;
+  /*color: white;*/
+  text-shadow: 0 1px 0 #131313, 0 2px 0 #000;
+}
+
+/*Stile bordo Clash of Clans*/
+.clash-style-border {
+  border: 3px solid black;
+  background: white;
+
+  /* Ombra sotto il bordo per effetto 3D */
+  box-shadow: 0 3px 0 #000, /* piccolo spessore 3D */ 0 6px 0 #0006; /* ombra più morbida */
 }

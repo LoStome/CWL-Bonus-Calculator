@@ -40,6 +40,12 @@ class CocDataProcessor {
           name: clan.name,
           clanLevel: clan.clanLevel,
           badgeUrls: clan.badgeUrls,
+          /*
+          //to add
+          totalStars
+          totalPercentage
+          clanPosition
+          */
         };
         cwlMainData.clans.push(clanData);
       });
@@ -135,6 +141,7 @@ class CocDataProcessor {
     return correctClanWars;
   }
 
+  //ridimensionare
   async savePlayerData(clanTag) {
     let correctClanWars = await this.warFilter(clanTag);
     let clanTagToMatch = "#" + clanTag;
@@ -165,6 +172,8 @@ class CocDataProcessor {
             townhallLevel: member.townhallLevel,
             mapPosition: member.mapPosition,
             attacks: member.attacks || [],
+            //totalP
+
             /*
           defences not implemented
           opponentAttacks: member.opponentAttacks || 0,
@@ -224,5 +233,47 @@ class CocDataProcessor {
     return clanMembers;
   }
 }
+
+/*
+ async savePlayerData(clanTag) {
+  const correctClanWars = await this.warFilter(clanTag);
+  const clanTagToMatch = "#" + clanTag;
+  const clanMembers = [];
+
+  try {
+    for (let i = 0; i < correctClanWars.length; i++) {
+      const warData = correctClanWars[i];
+
+      const members = this.getMembersFromCorrectSide(warData, clanTagToMatch);
+
+      for (const member of members) {
+        const memberData = this.createMemberBase(member);
+
+        const enrichedAttacks = this.createAttacksWithWarInfo(
+          member.attacks || [],
+          warData,
+          i + 1
+        );
+
+        this.addOrUpdateMember(clanMembers, memberData, enrichedAttacks);
+      }
+    }
+  } catch (err) {
+    console.error("Errore durante salvataggio dati giocatori:", err);
+    return [];
+  }
+
+  return clanMembers;
+}
+ */
+
+//metodi da aggiungere
+
+//getTotalClanStars
+//getTotalClanPercentage
+
+//getTotalPlayerStars(playerTag)
+//getPlayerStars
+//getPlayerPercentage
 
 module.exports = new CocDataProcessor();

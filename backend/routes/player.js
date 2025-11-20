@@ -8,7 +8,7 @@ router.get("/test", (req, res) => {
   res.json({ ok: true, message: "PLAYER route attiva!" });
 });
 
-router.get("/playerData", async (req, res) => {
+router.get("/getPlayerData", async (req, res) => {
   try {
     const { playerTag } = req.query;
 

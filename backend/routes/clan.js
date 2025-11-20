@@ -8,7 +8,7 @@ router.get("/test", (req, res) => {
   res.json({ ok: true, message: "CLAN route attiva!" });
 });
 
-router.get("/clanData", async (req, res) => {
+router.get("/getClanData", async (req, res) => {
   try {
     const { clanTag } = req.query;
 

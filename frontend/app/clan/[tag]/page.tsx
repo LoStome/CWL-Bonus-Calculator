@@ -17,15 +17,16 @@ export default function ClanPage() {
   useEffect(() => {
     const fetchClanData = async () => {
       try {
-        const response = await fetch(`/api/clan/clanData?clanTag=${tag}`);
+        const response = await fetch(`/api/clan/getClanData?clanTag=${tag}`);
 
         if (!response.ok) {
-          throw new Error("Clan non trovato");
+          throw new Error("clan not found :(");
         }
 
         const data = await response.json();
-        setClanData(data.data);
+
         //data.data because the backend returns: { ok: true, data: {...} }
+        setClanData(data.data);
       } catch (err: any) {
         setError(err.message);
       } finally {

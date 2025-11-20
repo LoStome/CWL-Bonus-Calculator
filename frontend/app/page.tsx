@@ -15,18 +15,22 @@ export default function HomePage() {
     setError("");
 
     const standardizedTag = tag.replace("#", "").toUpperCase();
+
+    //codice di controllo da rivedere (inutilizzato)
+    //cio' che e' commentato e' inutilizzato perche' ridontante
+    //il controllo viene fatto nella pagina del clan
     try {
       // Verifies if clan exists
-      const response = await fetch(
-        `/api/clan/clanData?clanTag=${standardizedTag}`
+      /*const response = await fetch(
+        `/api/clan/getClanData?clanTag=${standardizedTag}`
       );
-
-      if (!response.ok) {
+      */
+      /*if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Clan not found");
-      }
+      }*/
       //response is ok
-      const ClanData = await response.json();
+      //const ClanData = await response.json();
       router.push(`/clan/${standardizedTag}`);
     } catch (err: any) {
       setError(err.message || "Errore nella ricerca del clan");

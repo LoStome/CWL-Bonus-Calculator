@@ -1,4 +1,5 @@
 //vecchio file da confrontare per costruire i nuovi
+//potrebbe anche essere eliminato
 
 const { officialCocClient, clashKingClient } = require("../config/api");
 const { transformTag, standardizeTag } = require("../utils/tagUtils");

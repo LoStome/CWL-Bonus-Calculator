@@ -9,7 +9,9 @@ app.use(cors());
 app.use(express.json());
 
 // IMPORT SERVICES
-const apiService = require("./Calculator/services/apiService");
+//const apiService = require("./Calculator/services/apiService");
+const api = require("../Calculator/services/cocApiClient");
+const dataElab = require("../Calculator/services/cocDataElaboration;");
 
 // IMPORT UTILS
 const {
@@ -35,6 +37,8 @@ module.exports = {
   transformTag,
   officialCocClient,
   clashKingClient,
+  api,
+  dataElab,
 };
 
 // ===== ROUTES =====

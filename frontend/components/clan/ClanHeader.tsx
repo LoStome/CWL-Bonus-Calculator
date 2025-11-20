@@ -1,13 +1,10 @@
-import { ClanData } from "./clan";
-import { Card } from "@/components/ui";
-
 import { ClanDescription } from "./ClanDescription";
 import { ClanBadge } from "./ClanBadge";
-
-import { SectionTitle } from "@/components/ui/SectionTitle";
 import { ClanInfoSection } from "./ClanInfoSection";
 import { ClanWarStatsSection } from "./ClanWarStatsSection";
+import { ClanData } from "./clan";
 
+import { Card, SectionTitle } from "@/components/ui";
 import { useResponsiveBadgeSize } from "@/hooks/useBreakpoint";
 
 interface ClanHeaderProps {

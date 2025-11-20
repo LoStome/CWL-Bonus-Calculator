@@ -1,4 +1,7 @@
+//DEBUG MAIN
+
 const { apiService, savedPlayerDataToString } = require(".");
+const { CocDataProcessor, api } = require(".");
 
 // TAGs for production
 //note: i tag per l'API kings devono essere senza '#' mentre per l'API ufficiale devono comprendere "#" e poi essere codificate con encodeURIComponent(tag)
@@ -10,12 +13,10 @@ const CWL_IAtag = "8QGGJQ8CY";
 async function main() {
   try {
     console.log("started main");
-    let clanInfo = await apiService.getClanInfo(C_ClanMadre);
-
-    let playerInfo = await apiService.getPlayerInfo(P_Lore);
+    CocDataProcessor.getCurrentCWLSeasonWarTags(C_ItalianArmyTag);
   } catch (error) {
     console.error("Errore nel main:", error);
   }
 }
 
-//main();
+main();

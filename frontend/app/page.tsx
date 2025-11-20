@@ -23,7 +23,7 @@ export default function HomePage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Clan non trovato");
+        throw new Error(errorData.error || "Clan not found");
       }
       //response is ok
       const ClanData = await response.json();

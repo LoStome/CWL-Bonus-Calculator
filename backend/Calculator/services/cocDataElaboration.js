@@ -1,92 +1,47 @@
-const { officialCocClient, clashKingClient } = require("../config/api");
+const api = require("./cocApiClient");
 const { transformTag, standardizeTag } = require("../utils/tagUtils");
 
-class ApiService {
-  //OFFICIAL CoC API
-  //returns the data of the player json
-  async getPlayerInfo(playerTag) {
-    //console.log("passed player tag= " + playerTag);
-    try {
-      //tranforms the tag because it's using official COC API
-      const response = await officialCocClient.get(
-        `/players/${transformTag(playerTag)}`
-      );
-      //console.log("Player CoC API Ufficiale:", response.data);
-      return response.data;
-    } catch (error) {
-      console.error(
-        "Error getting player data:",
-        error.response?.data || error.message
-      );
-      throw new Error(
-        `Player API error: ${error.response?.data?.message || error.message}`
-      );
-    }
+//--------DATA ELABORATION--------
+
+class CocDataProcessor {
+  /*trying to implement a way to call the api only once for each tag
+    instead of twice (getCurrentCWLSeasonMainData and getCurrentCWLSeasonWarTags)  
+    
+    if done like this it would not work when receiving the second clan's tag
+    would return the first clan's data
+  
+  constructor() {
+    this.cwlData = null;
   }
 
-  //returns the data of the clan (json)
-  async getClanInfo(clanTag) {
-    //console.log("passed clan tag= " + clanTag);
-    //console.log("transformed clan tag: " + transformTag(clanTag));
-    try {
-      //tranforms the tag because it's using official COC API
-      const response = await officialCocClient.get(
-        `/clans/${transformTag(clanTag)}`
-      );
-      //console.log("Player CoC API Ufficiale:", response.data);
-      return response.data;
-    } catch (error) {
-      console.error(
-        "Error getting clan data:",
-        error.response?.data || error.message
-      );
-      throw new Error(
-        `Clan API error: ${error.response?.data?.message || error.message}`
-      );
+  async saveCurrentSeasonData(clanTag) {
+    if (this.cwlData == null) {
+      this.cwlData = await api.getCurrentCWLSeasonData(clanTag);
     }
-  }
+    return this.cwlData;
+  } */
 
-  //return the war data of the inputted war tag
-  async getWarData(warTag) {
+  async getCurrentCWLSeasonMainData(clanTag) {
     try {
-      let response = await officialCocClient.get(
-        `/clanwarleagues/wars/${transformTag(warTag)}`
-      );
-      let warData = response.data;
-      //console.log("War Data of war: " + warTag, warData);
-      return warData;
-    } catch (error) {
-      console.error(
-        "Error getting war data:",
-        error.response?.data || error.message
-      );
-      throw new Error(
-        `War API error: ${error.response?.data?.message || error.message}`
-      );
-    }
-  }
+      let cwlData = await api.getCurrentCWLSeasonData(clanTag);
 
-  //API CLASH KING
-  //funzione di prova
-  async getPlayerInfoKINGS(tag) {
-    try {
-      let playerInfo = await clashKingClient.get(`/player/${tag}/stats`)(tag);
-      console.log("(CLASH KING) this is the player info:", playerInfo);
+      let cwlMainData = { state: cwlData.state };
+      console.log(cwlData.state);
+      return cwlMainData;
     } catch (error) {
       console.error(error);
       throw new Error(
-        `Player API error: ${error.response?.data?.message || error.message}`
+        `Current CWL season main data elaboration error: ${
+          error.response?.data?.message || error.message
+        }`
       );
     }
   }
 
-  async getCurrentSeasonCWLWarTags(clanTag) {
+  async getCurrentCWLSeasonWarTags(clanTag) {
     try {
-      //gets API data
-      let response = await clashKingClient.get(`/cwl/${clanTag}/group`);
-      let cwlData = response.data;
       //console.log("CWL Data: ", cwlData);
-
+      let cwlData = await api.getCurrentCWLSeasonData(clanTag);
       let allWarTags = [];
 
       cwlData.data.rounds.forEach(function (round, roundIndex) {
@@ -94,11 +49,10 @@ class ApiService {
         let roundData = {
           roundNumber: roundIndex + 1,
 
-          //warTags: round.warTags.filter(warTag => warTag && warTag !== '#0')
           warTags: round.warTags
+
             //#0 are invalid war for CoC's API, so they are filtered out
-            .filter((warTag) => warTag && warTag !== "#0")
-            //since tag is used, it gets standardized
+            //.filter((warTag) => warTag && warTag !== "#0")
             .map((warTag) => standardizeTag(warTag)),
         };
         //console.log("Round created:", roundData.roundNumber);
@@ -108,18 +62,18 @@ class ApiService {
     } catch (error) {
       console.error(error);
       throw new Error(
-        `CWL API error: ${error.response?.data?.message || error.message}`
+        `Current CWL season war tags elaboration error: ${
+          error.response?.data?.message || error.message
+        }`
       );
     }
   }
-
-  //--------DATA ELABORATION--------
 
   //filters all the wars of the CWL season to find the ones with the correspondent CLAN TAG
   //returns an array which contains the wars battled by the clan in the season
   async warFilter(clanTag) {
     let correctClanWars = [];
-    let allSeasonWarTags = await this.getCurrentSeasonCWLWarTags(clanTag);
+    let allSeasonWarTags = await this.getCurrentCWLSeasonWarTags(clanTag);
     //console.log('clantag to find: '+clanTag)
 
     try {
@@ -133,7 +87,7 @@ class ApiService {
         // Iteration of concurrent round
         for (let warTag of round.warTags) {
           //console.log(warTag)
-          let war = await this.getWarData(warTag);
+          let war = await api.getWarData(warTag);
 
           //if clanTag is found inside the war, the data of the war is saved in correctClanWars
           if (
@@ -152,14 +106,14 @@ class ApiService {
         }
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error during war filtering:", error);
       return [];
     }
 
     return correctClanWars;
   }
 
-  async savedPlayerData(clanTag) {
+  async savePlayerData(clanTag) {
     let correctClanWars = await this.warFilter(clanTag);
     let clanTagToMatch = "#" + clanTag;
     //console.log('clantag to match: '+clanTagToMatch)
@@ -249,4 +203,4 @@ class ApiService {
   }
 }
 
-module.exports = new ApiService();
+module.exports = new CocDataProcessor();

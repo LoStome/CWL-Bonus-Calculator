@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 import { ClanData } from "@/components/clan/clan";
-import { ClanHeader } from "@/components/clan";
+import { ClanHeader } from "@/components/clan/";
+import { CwlCurrentSeasonCard } from "@/components/cwl/";
 
 export default function ClanPage() {
   const params = useParams();
@@ -54,10 +55,14 @@ export default function ClanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-500 p-6">
+      <div className="space-y-3">
         <ClanHeader clanData={clanData!} />
         {/*Type Assertion: Uses to tell js that the data is never null | if not done an error is shown in VScode*/}
+
+        <div></div>
+
+        <CwlCurrentSeasonCard></CwlCurrentSeasonCard>
       </div>
     </div>
   );

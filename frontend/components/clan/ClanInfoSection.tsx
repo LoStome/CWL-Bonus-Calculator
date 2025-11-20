@@ -1,5 +1,4 @@
 import { ClanData } from "./clan";
-
 import { InfoRow } from "./InfoRow";
 
 interface ClanInfoSectionProps {

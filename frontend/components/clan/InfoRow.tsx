@@ -1,4 +1,3 @@
-// components/clan/InfoRow.tsx
 interface InfoRowProps {
   label: string;
   value: string | number;

@@ -1,4 +1,3 @@
-// ClanBadge.tsx
 interface ClanBadgeProps {
   size: "small" | "medium" | "large";
   badgeUrls: {

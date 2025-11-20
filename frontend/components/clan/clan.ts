@@ -15,15 +15,3 @@ export interface ClanData {
   warWins: number;
   warLosses: number;
 }
-
-/*export interface WarLeague {
-  id: number;
-  name: string;
-}
-
-export interface badgeUrls {
-  small: string;
-  medium: string;
-  large: string;
-}
-*/

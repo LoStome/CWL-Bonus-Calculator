@@ -1,0 +1,1 @@
+export { CwlCurrentSeasonCard } from "./CwlCurrentSeasonCard";

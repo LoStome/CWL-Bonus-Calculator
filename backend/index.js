@@ -15,7 +15,7 @@ const cocDataElaboration = require("./Calculator/services/cocDataElaboration");
 // IMPORT UTILS
 const {
   savedPlayerDataToString,
-  warTagsToString,
+  //warTagsToString,
   correctClanWarsToString,
 } = require("./Calculator/utils/stringUtils");
 
@@ -30,7 +30,7 @@ const {
 // EXPORT
 module.exports = {
   savedPlayerDataToString,
-  warTagsToString,
+  //warTagsToString,
   correctClanWarsToString,
   transformTag,
 

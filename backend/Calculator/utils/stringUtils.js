@@ -1,4 +1,8 @@
 //TO STRINGS
+
+/*
+//does not make sense to have
+//have to decide if i'm gonna delete this for cleaner code
 function warTagsToString(warTagsData) {
   let result = "=== CWL WAR TAGS ===\n";
 
@@ -15,7 +19,7 @@ function warTagsToString(warTagsData) {
   });
 
   return result;
-}
+}*/
 
 function correctClanWarsToString(correctClanWars) {
   let result = "=== Correct Clan Wars ===\n";
@@ -73,7 +77,7 @@ function savedPlayerDataToString(clanMembers) {
 }
 
 module.exports = {
-  warTagsToString,
+  //warTagsToString,
   correctClanWarsToString,
   savedPlayerDataToString,
 };

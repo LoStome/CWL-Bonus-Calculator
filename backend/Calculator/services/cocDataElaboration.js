@@ -1,10 +1,10 @@
-const api = require("./cocApiClient");
+const cocApiClient = require("./cocApiClient");
 const { transformTag, standardizeTag } = require("../utils/tagUtils");
 
 //--------DATA ELABORATION--------
 
 class CocDataProcessor {
-  /*trying to implement a way to call the api only once for each tag
+  /*trying to implement a way to call the cocApiClient only once for each tag
     instead of twice (getCurrentCWLSeasonMainData and getCurrentCWLSeasonWarTags)  
     
     if done like this it would not work when receiving the second clan's tag
@@ -16,17 +16,35 @@ class CocDataProcessor {
 
   async saveCurrentSeasonData(clanTag) {
     if (this.cwlData == null) {
-      this.cwlData = await api.getCurrentCWLSeasonData(clanTag);
+      this.cwlData = await cocApiClient.getCurrentCWLSeasonData(clanTag);
     }
     return this.cwlData;
   } */
 
   async getCurrentCWLSeasonMainData(clanTag) {
     try {
-      let cwlData = await api.getCurrentCWLSeasonData(clanTag);
+      let { data: cwlData } = await cocApiClient.getCurrentCWLSeasonData(
+        clanTag
+      );
+      //console.log("CWL Data: ", cwlData);
 
-      let cwlMainData = { state: cwlData.state };
-      console.log(cwlData.state);
+      let cwlMainData = {
+        state: cwlData.state,
+        season: cwlData.season,
+        clans: [],
+      };
+
+      cwlData.clans.forEach((clan) => {
+        const clanData = {
+          tag: clan.tag,
+          name: clan.name,
+          clanLevel: clan.clanLevel,
+          badgeUrls: clan.badgeUrls,
+        };
+        cwlMainData.clans.push(clanData);
+      });
+
+      //console.log("CWL Main Data: ", cwlMainData);
       return cwlMainData;
     } catch (error) {
       console.error(error);
@@ -40,24 +58,28 @@ class CocDataProcessor {
 
   async getCurrentCWLSeasonWarTags(clanTag) {
     try {
+      let { data: cwlData } = await cocApiClient.getCurrentCWLSeasonData(
+        clanTag
+      );
       //console.log("CWL Data: ", cwlData);
-      let cwlData = await api.getCurrentCWLSeasonData(clanTag);
+
       let allWarTags = [];
 
-      cwlData.data.rounds.forEach(function (round, roundIndex) {
+      cwlData.rounds.forEach(function (round, roundIndex) {
         //Creates an object for each round with its WarTags in it
         let roundData = {
           roundNumber: roundIndex + 1,
 
           warTags: round.warTags
 
-            //#0 are invalid war for CoC's API, so they are filtered out
+            //#0 are invalid war for CoC's api, so they are filtered out
             //.filter((warTag) => warTag && warTag !== "#0")
             .map((warTag) => standardizeTag(warTag)),
         };
         //console.log("Round created:", roundData.roundNumber);
         allWarTags.push(roundData);
       });
+      //console.log("all War Tags: ", allWarTags);
       return allWarTags;
     } catch (error) {
       console.error(error);
@@ -87,7 +109,7 @@ class CocDataProcessor {
         // Iteration of concurrent round
         for (let warTag of round.warTags) {
           //console.log(warTag)
-          let war = await api.getWarData(warTag);
+          let war = await cocApiClient.getWarData(warTag);
 
           //if clanTag is found inside the war, the data of the war is saved in correctClanWars
           if (

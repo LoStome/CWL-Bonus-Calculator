@@ -1,3 +1,5 @@
+//vecchio file da confrontare per costruire i nuovi
+
 const { officialCocClient, clashKingClient } = require("../config/api");
 const { transformTag, standardizeTag } = require("../utils/tagUtils");
 
@@ -106,7 +108,10 @@ class ApiService {
       });
       return allWarTags;
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Error getting CWL data:",
+        error.response?.data || error.message
+      );
       throw new Error(
         `CWL API error: ${error.response?.data?.message || error.message}`
       );
@@ -152,7 +157,7 @@ class ApiService {
         }
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error during war filtering:", error);
       return [];
     }
 

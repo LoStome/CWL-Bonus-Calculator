@@ -11,10 +11,10 @@ const CWL_IAtag = "8QGGJQ8CY";
 async function main() {
   try {
     console.log("started main");
-    let data = cocDataElaboration.getCurrentCWLSeasonWarTags(C_ItalianArmyTag);
+    let data = cocDataElaboration.getCurrentCWLSeasonMainData(C_ItalianArmyTag);
   } catch (error) {
     console.error("Errore nel main:", error);
   }
 }
 
-main();
+//main();

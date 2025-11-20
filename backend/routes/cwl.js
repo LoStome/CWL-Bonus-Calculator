@@ -8,9 +8,8 @@ router.get("/test", (req, res) => {
   res.json({ ok: true, message: "CWL route attiva!" });
 });
 
-//trasformare in getCurrent Season (solo clan tag in input)
-//ritorna i dati della season principali
-/*router.get("/getCurrentSeasonData", async (req, res) => {
+//returns the data from getCurrentCWLSeasonMainData(clanTag)
+router.get("/getCurrentCWLSeasonData", async (req, res) => {
   try {
     const { clanTag } = req.query;
 
@@ -21,9 +20,9 @@ router.get("/test", (req, res) => {
       });
     }
 
-    // saves all season data in a constant
-    //rifare qui manda solo i dati dei giocatori
-    const seasonData = await apiService.savedPlayerData(clanTag);
+    const seasonData = await cocDataElaboration.getCurrentCWLSeasonMainData(
+      clanTag
+    );
 
     //outputs the data structure as json
     res.json({
@@ -32,14 +31,13 @@ router.get("/test", (req, res) => {
       data: seasonData,
     });
   } catch (error) {
-    console.error("Error fetching CWL season data:", error);
+    console.error("Error fetching current CWL season data:", error);
     res.status(500).json({
       ok: false,
       error: "Server error",
     });
   }
 });
-*/
 
 router.get("/getCurrentSeasonPlayerData", async (req, res) => {
   try {
@@ -52,8 +50,6 @@ router.get("/getCurrentSeasonPlayerData", async (req, res) => {
       });
     }
 
-    // saves all season data in a constant
-    //rifare qui manda solo i dati dei giocatori
     const playerData = await cocDataElaboration.savePlayerData(clanTag);
 
     //outputs the data structure as json
@@ -63,7 +59,7 @@ router.get("/getCurrentSeasonPlayerData", async (req, res) => {
       data: playerData,
     });
   } catch (error) {
-    console.error("Error fetching CWL season data:", error);
+    console.error("Error fetching current CWL season player's data:", error);
     res.status(500).json({
       ok: false,
       error: "Server error",

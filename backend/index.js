@@ -9,9 +9,8 @@ app.use(cors());
 app.use(express.json());
 
 // IMPORT SERVICES
-//const apiService = require("./Calculator/services/apiService");
-const api = require("../Calculator/services/cocApiClient");
-const dataElab = require("../Calculator/services/cocDataElaboration;");
+const cocApiClient = require("./Calculator/services/cocApiClient");
+const cocDataElaboration = require("./Calculator/services/cocDataElaboration");
 
 // IMPORT UTILS
 const {
@@ -30,15 +29,16 @@ const {
 
 // EXPORT
 module.exports = {
-  apiService,
   savedPlayerDataToString,
   warTagsToString,
   correctClanWarsToString,
   transformTag,
+
   officialCocClient,
   clashKingClient,
-  api,
-  dataElab,
+
+  cocApiClient,
+  cocDataElaboration,
 };
 
 // ===== ROUTES =====

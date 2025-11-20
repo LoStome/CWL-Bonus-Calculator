@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 
-const apiService = require("../Calculator/services/apiService");
+const { cocDataElaboration, cocApiClient } = require("../");
 
 router.get("/test", (req, res) => {
   res.json({ ok: true, message: "CLAN route attiva!" });
@@ -20,7 +20,7 @@ router.get("/clanData", async (req, res) => {
     }
 
     // saves all clan data in a constant
-    const clanData = await apiService.getClanInfo(clanTag);
+    const clanData = await cocApiClient.getClanInfo(clanTag);
 
     //outputs the data structure as json
     res.json({

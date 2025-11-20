@@ -2,11 +2,7 @@
 const express = require("express");
 const router = express.Router();
 
-//const apiService = require("../Calculator/services/apiService");
-
-//da finire
-const api = require("../Calculator/services/cocApiClient");
-const processor = require("../Calculator/services/cocDataElaboration;");
+const { cocDataElaboration, cocApiClient } = require("../");
 
 router.get("/test", (req, res) => {
   res.json({ ok: true, message: "CWL route attiva!" });
@@ -58,7 +54,7 @@ router.get("/getCurrentSeasonPlayerData", async (req, res) => {
 
     // saves all season data in a constant
     //rifare qui manda solo i dati dei giocatori
-    const playerData = await apiService.savePlayerData(clanTag);
+    const playerData = await cocDataElaboration.savePlayerData(clanTag);
 
     //outputs the data structure as json
     res.json({

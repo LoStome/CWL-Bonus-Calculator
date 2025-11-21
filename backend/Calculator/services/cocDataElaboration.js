@@ -153,41 +153,36 @@ class CocDataProcessor {
       for (let i = 0; i < correctClanWars.length; i++) {
         let warData = correctClanWars[i];
 
-        let members;
-        //console.log("\nWar N: " + (i + 1));
-        //checks which is the correct clan from where to save player data for this round
-        if (warData.war.clan.tag === clanTagToMatch) {
-          members = warData.war.clan.members;
-        } else {
-          members = warData.war.opponent.members;
-        }
+        let members = this.getMembersFromCorrectSide(warData, clanTagToMatch);
 
         //starts to save each player as an object
-        for (let j = 0; j < members.length; j++) {
-          let member = members[j];
+        for (const j = 0; j < members.length; j++) {
+          const member = members[j];
 
           let memberData = {
             tag: member.tag,
             name: member.name,
             townhallLevel: member.townhallLevel,
             mapPosition: member.mapPosition,
+            //totalPlayerStars: to be implemented
+            //totalPlayerPercentage: to be implemented
             attacks: member.attacks || [],
-            //totalP
-
             /*
-          defences not implemented
-          opponentAttacks: member.opponentAttacks || 0,
-          bestOpponentAttack: member.bestOpponentAttack || null
-          */
+            not planning to implemente defences for now
+            this is what is needed to implement them
+            //opponentAttacks: member.opponentAttacks || 0,
+            //bestOpponentAttack: member.bestOpponentAttack || null
+            */
           };
+          //console.log("Player N " + (j + 1) + " = " + member.name);
 
-          // to checks if player already exists, saves member index
+          //to checks if player already exists in the saved array of player, saves the member index
           let existingIndex = clanMembers.findIndex(
             (member) => member.tag === memberData.tag
           );
 
-          //console.log("Player N " + (j + 1) + " = " + member.name);
-          //checks if the player already exists with it's tag
+          //existsingIndex will be -1 if player is not found
+
           if (existingIndex === -1) {
             //modifies the attacks property of memberData
             memberData.attacks = (member.attacks || []).map((attack) => ({
@@ -231,6 +226,16 @@ class CocDataProcessor {
       return [];
     }
     return clanMembers;
+  }
+
+  //helper funtions for savePlayerData
+  //returns the members array from the correct side of the war
+  getMembersFromCorrectSide(warData, clanTagToMatch) {
+    if (warData.war.clan.tag === clanTagToMatch) {
+      return warData.war.clan.members;
+    } else {
+      return warData.war.opponent.members;
+    }
   }
 }
 

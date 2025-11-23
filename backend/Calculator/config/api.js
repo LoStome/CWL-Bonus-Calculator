@@ -1,7 +1,6 @@
 // LIBRERIE
 require("dotenv").config();
 const axios = require("axios");
-//const clashApi = require('clashofclans.js')
 
 // API KEYS
 const COC_API_KEY = process.env.COC_API_TOKEN; //official CoC api

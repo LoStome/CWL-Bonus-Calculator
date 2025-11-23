@@ -56,7 +56,7 @@ class CocApiClient {
   async getCurrentCWLSeasonData(clanTag) {
     try {
       //this API calls returns the main CWL season Data()
-      let response = await clashKingClient.get(`/cwl/${clanTag}/group`);
+      let response = await clashKingClient.get(`/cwl/${transformTag(clanTag)}/group`);
       return response.data;
     } catch (error) {
       console.error(error);

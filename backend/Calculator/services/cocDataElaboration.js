@@ -171,43 +171,24 @@ class CocDataProcessor {
 
           //to checks if player already exists in the saved array of player, saves the member index
           let existingIndex = clanMembers.findIndex((member) => member.tag === memberData.tag);
-
-          //existsingIndex will be -1 if player is not found
+          
           if (existingIndex === -1) {
-            //modifies the attacks property of memberData
-            memberData.attacks = (member.attacks || []).map((attack) => ({
-              ...attack, //copies attack properties
-              warTag: warData.warTag, //adds war's wartag
-              warNumber: i + 1, //adds war's number
-            }));
+            //if player is not found, modifies the attacks property of memberData
+            let attackData = this.tweakAttacksData(existingIndex, memberData, warData, member ,i+1);
+            clanMembers.push(attackData);
 
-
-            for (let k=0; k<member.attacks?.length || 0; k++) {
-              memberData.totalPlayerStars += member.attacks[k].stars;
-              memberData.totalPlayerPercentage += member.attacks[k].destructionPercentage;
-            } 
-
-            //adds player to the list
-            clanMembers.push(memberData);
           } else {
-            //adds war attacks to the already added player
-            let attacksWithWarInfo = (member.attacks || []).map((attack) => ({
-              ...attack,
-              warTag: warData.warTag,
-              warNumber: i + 1,
-            }));
 
+            //if player is found, updates totalPlayerStars and totalPlayerPercentage
             for (let k=0; k<member.attacks?.length || 0; k++) {
               clanMembers[existingIndex].totalPlayerStars += member.attacks[k].stars;
               clanMembers[existingIndex].totalPlayerPercentage += member.attacks[k].destructionPercentage;
             }
 
             //adds the new attacks to the existing player's attacks array (main difference with above)
-            clanMembers[existingIndex].attacks.push(...attacksWithWarInfo);
+            let attackData = this.tweakAttacksData(existingIndex, memberData, warData, member ,i+1);
+            clanMembers[existingIndex].attacks.push(attackData);
           }
-          /*console.log("Saved member: " + member.name);
-          console.log (member.name + " total stars: " + clanMembers[0].totalPlayerStars);
-          console.log (member.name + " total percentage: " + clanMembers[0].totalPlayerStars);*/
         }
       }
     } catch (error) {
@@ -226,16 +207,46 @@ class CocDataProcessor {
       return warData.war.opponent.members;
     }
   }
+  //modifies the attacks property of memberData
+  tweakAttacksData(existingIndex, memberData, warData, member ,warCounter) {
 
-  /*pushAttackData(existingIndex, memberData, warData, member ,warCounter) {
-
-    //modifies the attacks property of memberData
     memberData.attacks = (member.attacks || []).map((attack) => ({
-      ...attack, //copies attack properties
-      warTag: warData.warTag, //adds war's wartag
-      warNumber: warCounter + 1, //adds war's number
+      //copies attack properties
+      ...attack, 
+      //adds war's wartag
+      warTag: warData.warTag, 
+      //adds war's number
+      warNumber: warCounter, 
     }));
-  }*/
+
+    //if player is not found
+    if (existingIndex === -1) {
+      for (let k=0; k<member.attacks?.length || 0; k++) {
+        memberData.totalPlayerStars += member.attacks[k].stars;
+        memberData.totalPlayerPercentage += member.attacks[k].destructionPercentage;
+      } 
+
+      return memberData;
+    } else {
+
+      let attacksWithWarInfo = (member.attacks || []).map((attack) => ({
+        ...attack,
+        warTag: warData.warTag,
+        warNumber: warCounter,
+      }));
+
+      /*
+      capire come implementare all'interno della funzione
+
+      //if player is found, updates totalPlayerStars and totalPlayerPercentage
+      for (let k=0; k<member.attacks?.length || 0; k++) {
+        clanMembers[existingIndex].totalPlayerStars += member.attacks[k].stars;
+        clanMembers[existingIndex].totalPlayerPercentage += member.attacks[k].destructionPercentage;
+      }*/
+
+      return attacksWithWarInfo;
+    }
+  }
 }
 
 module.exports = new CocDataProcessor();

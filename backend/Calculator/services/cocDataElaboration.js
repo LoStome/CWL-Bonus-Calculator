@@ -23,9 +23,7 @@ class CocDataProcessor {
 
   async getCurrentCWLSeasonMainData(clanTag) {
     try {
-      let { data: cwlData } = await cocApiClient.getCurrentCWLSeasonData(
-        clanTag
-      );
+      let { data: cwlData } = await cocApiClient.getCurrentCWLSeasonData(clanTag);
       //console.log("CWL Data: ", cwlData);
 
       let cwlMainData = {
@@ -64,9 +62,7 @@ class CocDataProcessor {
 
   async getCurrentCWLSeasonWarTags(clanTag) {
     try {
-      let { data: cwlData } = await cocApiClient.getCurrentCWLSeasonData(
-        clanTag
-      );
+      let { data: cwlData } = await cocApiClient.getCurrentCWLSeasonData(clanTag);
       //console.log("CWL Data: ", cwlData);
 
       let allWarTags = [];
@@ -118,10 +114,7 @@ class CocDataProcessor {
           let war = await cocApiClient.getWarData(warTag);
 
           //if clanTag is found inside the war, the data of the war is saved in correctClanWars
-          if (
-            war.clan.tag === clanTagToMatch ||
-            war.opponent.tag === clanTagToMatch
-          ) {
+          if (war.clan.tag === clanTagToMatch || war.opponent.tag === clanTagToMatch) {
             //console.log("clan found in war: "+warTag)
             //creates an object that contains the correct war data and the war tag
             let warData = {
@@ -142,10 +135,9 @@ class CocDataProcessor {
   }
 
   //ridimensionare
-  async savePlayerData(clanTag) {
+  async saveMembersData(clanTag) {
     let correctClanWars = await this.warFilter(clanTag);
     let clanTagToMatch = "#" + clanTag;
-    //console.log('clantag to match: '+clanTagToMatch)
     let clanMembers = [];
 
     try {
@@ -156,17 +148,18 @@ class CocDataProcessor {
         let members = this.getMembersFromCorrectSide(warData, clanTagToMatch);
 
         //starts to save each player as an object
-        for (const j = 0; j < members.length; j++) {
-          const member = members[j];
+        for (let j = 0; j < members.length; j++) {
+          let member = members[j];
 
           let memberData = {
             tag: member.tag,
             name: member.name,
             townhallLevel: member.townhallLevel,
             mapPosition: member.mapPosition,
-            //totalPlayerStars: to be implemented
-            //totalPlayerPercentage: to be implemented
+            totalPlayerStars: 0,
+            totalPlayerPercentage: 0,
             attacks: member.attacks || [],
+
             /*
             not planning to implemente defences for now
             this is what is needed to implement them
@@ -174,15 +167,12 @@ class CocDataProcessor {
             //bestOpponentAttack: member.bestOpponentAttack || null
             */
           };
-          //console.log("Player N " + (j + 1) + " = " + member.name);
+
 
           //to checks if player already exists in the saved array of player, saves the member index
-          let existingIndex = clanMembers.findIndex(
-            (member) => member.tag === memberData.tag
-          );
+          let existingIndex = clanMembers.findIndex((member) => member.tag === memberData.tag);
 
           //existsingIndex will be -1 if player is not found
-
           if (existingIndex === -1) {
             //modifies the attacks property of memberData
             memberData.attacks = (member.attacks || []).map((attack) => ({
@@ -190,15 +180,15 @@ class CocDataProcessor {
               warTag: warData.warTag, //adds war's wartag
               warNumber: i + 1, //adds war's number
             }));
+
+
+            for (let k=0; k<member.attacks?.length || 0; k++) {
+              memberData.totalPlayerStars += member.attacks[k].stars;
+              memberData.totalPlayerPercentage += member.attacks[k].destructionPercentage;
+            } 
+
             //adds player to the list
             clanMembers.push(memberData);
-            /*console.log(
-            "New member added: " +
-              member.name +
-              ": added  " +
-              (member.attacks?.length || 0) +
-              " attacks\n"
-          );*/
           } else {
             //adds war attacks to the already added player
             let attacksWithWarInfo = (member.attacks || []).map((attack) => ({
@@ -207,28 +197,27 @@ class CocDataProcessor {
               warNumber: i + 1,
             }));
 
+            for (let k=0; k<member.attacks?.length || 0; k++) {
+              clanMembers[existingIndex].totalPlayerStars += member.attacks[k].stars;
+              clanMembers[existingIndex].totalPlayerPercentage += member.attacks[k].destructionPercentage;
+            }
+
+            //adds the new attacks to the existing player's attacks array (main difference with above)
             clanMembers[existingIndex].attacks.push(...attacksWithWarInfo);
-            /*
-          console.log(
-            "Already existing member, added " +
-              (member.attacks?.length || 0) +
-              " attacks\n"
-          );
-          */
           }
+          /*console.log("Saved member: " + member.name);
+          console.log (member.name + " total stars: " + clanMembers[0].totalPlayerStars);
+          console.log (member.name + " total percentage: " + clanMembers[0].totalPlayerStars);*/
         }
       }
     } catch (error) {
-      console.error(
-        "Errore durante il salvataggio dei dati dei giocatori:",
-        error
-      );
+      console.error("Errore durante il salvataggio dei dati dei giocatori:", error);
       return [];
     }
     return clanMembers;
   }
 
-  //helper funtions for savePlayerData
+  //helper funtions for saveMembersData
   //returns the members array from the correct side of the war
   getMembersFromCorrectSide(warData, clanTagToMatch) {
     if (warData.war.clan.tag === clanTagToMatch) {
@@ -237,48 +226,16 @@ class CocDataProcessor {
       return warData.war.opponent.members;
     }
   }
+
+  /*pushAttackData(existingIndex, memberData, warData, member ,warCounter) {
+
+    //modifies the attacks property of memberData
+    memberData.attacks = (member.attacks || []).map((attack) => ({
+      ...attack, //copies attack properties
+      warTag: warData.warTag, //adds war's wartag
+      warNumber: warCounter + 1, //adds war's number
+    }));
+  }*/
 }
-
-/*
- async savePlayerData(clanTag) {
-  const correctClanWars = await this.warFilter(clanTag);
-  const clanTagToMatch = "#" + clanTag;
-  const clanMembers = [];
-
-  try {
-    for (let i = 0; i < correctClanWars.length; i++) {
-      const warData = correctClanWars[i];
-
-      const members = this.getMembersFromCorrectSide(warData, clanTagToMatch);
-
-      for (const member of members) {
-        const memberData = this.createMemberBase(member);
-
-        const enrichedAttacks = this.createAttacksWithWarInfo(
-          member.attacks || [],
-          warData,
-          i + 1
-        );
-
-        this.addOrUpdateMember(clanMembers, memberData, enrichedAttacks);
-      }
-    }
-  } catch (err) {
-    console.error("Errore durante salvataggio dati giocatori:", err);
-    return [];
-  }
-
-  return clanMembers;
-}
- */
-
-//metodi da aggiungere
-
-//getTotalClanStars
-//getTotalClanPercentage
-
-//getTotalPlayerStars(playerTag)
-//getPlayerStars
-//getPlayerPercentage
 
 module.exports = new CocDataProcessor();

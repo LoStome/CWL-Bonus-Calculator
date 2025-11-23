@@ -39,7 +39,7 @@ router.get("/getCurrentCWLSeasonData", async (req, res) => {
   }
 });
 
-router.get("/getCurrentSeasonPlayerData", async (req, res) => {
+router.get("/getCurrentSeasonPlayersData", async (req, res) => {
   try {
     const { clanTag } = req.query;
 
@@ -50,13 +50,13 @@ router.get("/getCurrentSeasonPlayerData", async (req, res) => {
       });
     }
 
-    const playerData = await cocDataElaboration.savePlayerData(clanTag);
+    const playersData = await cocDataElaboration.saveMembersData(clanTag);
 
     //outputs the data structure as json
     res.json({
       ok: true,
       clanTag: clanTag,
-      data: playerData,
+      data: playersData,
     });
   } catch (error) {
     console.error("Error fetching current CWL season player's data:", error);

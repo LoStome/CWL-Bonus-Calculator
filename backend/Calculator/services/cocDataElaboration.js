@@ -60,7 +60,7 @@ class CocDataProcessor {
         cwlMainData.clans.push(clanData);
       }
 
-      console.log(this.warCache);
+      //console.log(this.warCache);
 
       //console.log("CWL Main Data: ", cwlMainData);
       return cwlMainData;
@@ -172,10 +172,20 @@ class CocDataProcessor {
     };
 
     let wars = await this.warFilter(standardizeTag(clanTag));
-    //console.log(wars.length);
 
-    /*calculates total stars and total percentage
-    con un for loop*/
+    // calculates total stars and total percentage
+
+    for (let i = 0; i < wars.length; i++) {
+      let warData = wars[i];
+      let clanTagToMatch = "#" + clanTag;
+
+      console.log(warData);
+
+      const correctWar = this.getClanFromCorrectSide(warData, clanTagToMatch);
+
+      results.totalStars = results.totalStars += correctWar.stars;
+      results.totalPercentage = results.totalPercentage += correctWar.destructionPercentage;
+    }
 
     return results;
   }
@@ -256,12 +266,20 @@ class CocDataProcessor {
   //helper funtions for saveMembersData
   //returns the members array from the correct side of the war
   getMembersFromCorrectSide(warData, clanTagToMatch) {
+    const correctClan = this.getClanFromCorrectSide(warData, clanTagToMatch);
+
+    return correctClan.members;
+  }
+
+  //returns the clan data from the correct side of the war
+  getClanFromCorrectSide(warData, clanTagToMatch) {
     if (warData.war.clan.tag === clanTagToMatch) {
-      return warData.war.clan.members;
+      return warData.war.clan;
     } else {
-      return warData.war.opponent.members;
+      return warData.war.opponent;
     }
   }
+
   //modifies the attacks property of memberData
   tweakAttacksData(existingIndex, memberData, warData, member, warCounter) {
     memberData.attacks = (member.attacks || []).map((attack) => ({
@@ -287,15 +305,6 @@ class CocDataProcessor {
         warTag: warData.warTag,
         warNumber: warCounter,
       }));
-
-      /*
-      capire come implementare all'interno della funzione
-
-      //if player is found, updates totalPlayerStars and totalPlayerPercentage
-      for (let k=0; k<member.attacks?.length || 0; k++) {
-        clanMembers[existingIndex].totalPlayerStars += member.attacks[k].stars;
-        clanMembers[existingIndex].totalPlayerPercentage += member.attacks[k].destructionPercentage;
-      }*/
 
       return attacksWithWarInfo;
     }

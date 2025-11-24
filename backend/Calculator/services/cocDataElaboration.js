@@ -4,28 +4,38 @@ const { transformTag, standardizeTag } = require("../utils/tagUtils");
 //--------DATA ELABORATION--------
 
 class CocDataProcessor {
-  /*trying to implement a way to call the cocApiClient only once for each tag
-    instead of twice (getCurrentCWLSeasonMainData and getCurrentCWLSeasonWarTags)  
-    
-    if done like this it would not work when receiving the second clan's tag
-    would return the first clan's data
-  */
   constructor() {
     this.cwlData = null; // Cache per i dati del gruppo (season)
-    //this.warCache = [];
+
     this.warCache = {}; // key: warTag, value: warData
+    //this.warCache = [];
   }
 
-  /*async saveCurrentSeasonData(clanTag) {
-    if (this.cwlData == null) {
-      this.cwlData = await cocApiClient.getCurrentCWLSeasonData(clanTag);
+  //helper function to cache the CWL data for multiple calls
+  async _ensureLeagueGroupData(clanTag) {
+    const stdTag = standardizeTag(clanTag);
+
+    // 1. checks if there is cached data
+    if (this.cwlData) {
+      // 2. searches if the requested clan is present in the 'clans' array of the cached data
+      // The CWL group API returns 8 clans. If the requested tag is one of these,
+      // then the data we have is valid for it.
+      const isClanInCache = this.cwlData.data.clans.some((c) => c.tag === stdTag);
+
+      if (isClanInCache) {
+        return this.cwlData;
+      }
     }
+    //3. If not, fetch new data from the API
+    //console.log(`Fetching NEW API data for ${stdTag}`);
+    const response = await cocApiClient.getCurrentCWLSeasonData(stdTag);
+    this.cwlData = response;
     return this.cwlData;
-  }*/
+  }
 
   async getCurrentCWLSeasonMainData(clanTag) {
     try {
-      let { data: cwlData } = await cocApiClient.getCurrentCWLSeasonData(clanTag);
+      let { data: cwlData } = await this._ensureLeagueGroupData(clanTag);
       //console.log("CWL Data: ", cwlData);
 
       let cwlMainData = {
@@ -41,7 +51,11 @@ class CocDataProcessor {
           clanLevel: clan.clanLevel,
           badgeUrls: clan.badgeUrls,
 
+          //total stars and total percentage are broken (to do: fix))
           results: {
+            wins: 0,
+            losses: 0,
+            draws: 0,
             totalStars: 0,
             totalPercentage: 0,
             clanPosition: null,
@@ -53,15 +67,14 @@ class CocDataProcessor {
         clanData.results.totalStars = warResults.totalStars;
         clanData.results.totalPercentage = warResults.totalPercentage;
 
-        //TODO: implementare la posizione del clan nella classifica
-        //clanData.results.clanPosition = warResults.clanPosition;
-
         //adds the clanData to the cwlMainData
         cwlMainData.clans.push(clanData);
       }
 
-      //console.log(this.warCache);
+      //calculates and assigns the clans position in the CWL
+      //cwlMainData = this.calculateClansPosition(cwlMainData);
 
+      //console.log(this.warCache);
       //console.log("CWL Main Data: ", cwlMainData);
       return cwlMainData;
     } catch (error) {
@@ -74,9 +87,42 @@ class CocDataProcessor {
     }
   }
 
+  //sorts the clans by total stars and percentage and assigns their position
+  calculateClansPosition(cwlMainData) {
+    let clans = {}; //key: clanTag, value: {totalStars, totalPercentage}
+
+    //creates the sortable object
+    cwlMainData.clans.forEach((clan) => {
+      clans[clan.tag] = {
+        totalStars: clan.results.totalStars,
+        totalPercentage: clan.results.totalPercentage,
+      };
+    });
+
+    //sorts the clans by totalStars and totalPercentage
+    let sortedClans = Object.entries(clans).sort((a, b) => {
+      if (b[1].totalStars === a[1].totalStars) {
+        return b[1].totalPercentage - a[1].totalPercentage;
+      }
+      return b[1].totalStars - a[1].totalStars;
+    });
+
+    //assigns the position to each clan in the main data object
+    sortedClans.forEach((clanEntry, index) => {
+      let clanTag = clanEntry[0];
+      let position = index + 1;
+      let clanInMainData = cwlMainData.clans.find((clan) => clan.tag === clanTag);
+      if (clanInMainData) {
+        clanInMainData.results.clanPosition = position;
+      }
+    });
+
+    return cwlMainData;
+  }
+
   async getCurrentCWLSeasonWarTags(clanTag) {
     try {
-      let { data: cwlData } = await cocApiClient.getCurrentCWLSeasonData(clanTag);
+      let { data: cwlData } = await this._ensureLeagueGroupData(clanTag);
       //console.log("CWL Data: ", cwlData);
 
       let allWarTags = [];
@@ -92,7 +138,7 @@ class CocDataProcessor {
             //.filter((warTag) => warTag && warTag !== "#0")
             .map((warTag) => standardizeTag(warTag)),
         };
-        //console.log("Round created:", roundData.roundNumber);
+
         allWarTags.push(roundData);
       });
       //console.log("all War Tags: ", allWarTags);
@@ -112,14 +158,11 @@ class CocDataProcessor {
   async warFilter(clanTag) {
     let correctClanWars = [];
     let allSeasonWarTags = await this.getCurrentCWLSeasonWarTags(clanTag);
-    //console.log('clantag to find: '+clanTag)
 
     try {
       let clanTagToMatch = "#" + clanTag;
       // Iteration on every round (che è un oggetto)
       for (let round of allSeasonWarTags) {
-        //console.log(`Processing round ${round.roundNumber}`);
-
         // Iteration of concurrent round
         //checks each warTag of the round
         for (let warTag of round.warTags) {
@@ -146,7 +189,6 @@ class CocDataProcessor {
 
           //if clanTag is found inside the war, the data of the war is saved in correctClanWars
           if (war.clan.tag === clanTagToMatch || war.opponent.tag === clanTagToMatch) {
-            //console.log("clan found in war: "+warTag)
             //creates an object that contains the correct war data and the war tag
             let warData = {
               warTag: warTag,
@@ -166,27 +208,27 @@ class CocDataProcessor {
 
   async getWarsResults(clanTag) {
     let results = {
+      //wins: 0,
+      //losses: 0,
+      //draws: 0,
       totalStars: 0,
       totalPercentage: 0,
-      clanPosition: null,
+      //clanPosition: null,
     };
 
     let wars = await this.warFilter(standardizeTag(clanTag));
+    //console.log("Filtered wars for clan " + clanTag + ": ", wars);
 
     // calculates total stars and total percentage
-
     for (let i = 0; i < wars.length; i++) {
       let warData = wars[i];
       let clanTagToMatch = "#" + clanTag;
-
-      console.log(warData);
 
       const correctWar = this.getClanFromCorrectSide(warData, clanTagToMatch);
 
       results.totalStars = results.totalStars += correctWar.stars;
       results.totalPercentage = results.totalPercentage += correctWar.destructionPercentage;
     }
-
     return results;
   }
 

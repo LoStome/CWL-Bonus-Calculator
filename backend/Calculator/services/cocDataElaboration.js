@@ -64,6 +64,9 @@ class CocDataProcessor {
 
         //gets the wars results for the clan
         const warResults = await this.getWarsResults(clanData.tag);
+        clanData.results.wins = warResults.wins;
+        clanData.results.losses = warResults.losses;
+        clanData.results.draws = warResults.draws;
         clanData.results.totalStars = warResults.totalStars;
         clanData.results.totalPercentage = warResults.totalPercentage;
 
@@ -72,7 +75,7 @@ class CocDataProcessor {
       }
 
       //calculates and assigns the clans position in the CWL
-      //cwlMainData = this.calculateClansPosition(cwlMainData);
+      cwlMainData = this.calculateClansPosition(cwlMainData);
 
       //console.log(this.warCache);
       //console.log("CWL Main Data: ", cwlMainData);
@@ -207,22 +210,25 @@ class CocDataProcessor {
   }
 
   async getWarsResults(clanTag) {
+    const stdTag = standardizeTag(clanTag);
     let results = {
-      //wins: 0,
-      //losses: 0,
-      //draws: 0,
+      wins: 0,
+      losses: 0,
+      draws: 0,
       totalStars: 0,
       totalPercentage: 0,
-      //clanPosition: null,
+      clanPosition: null,
     };
 
-    let wars = await this.warFilter(standardizeTag(clanTag));
+    //todo: implement wins, losses, draws calculation
+
+    let wars = await this.warFilter(stdTag);
     //console.log("Filtered wars for clan " + clanTag + ": ", wars);
 
     // calculates total stars and total percentage
     for (let i = 0; i < wars.length; i++) {
       let warData = wars[i];
-      let clanTagToMatch = "#" + clanTag;
+      let clanTagToMatch = "#" + stdTag;
 
       const correctWar = this.getClanFromCorrectSide(warData, clanTagToMatch);
 

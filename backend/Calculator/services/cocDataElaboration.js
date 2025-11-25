@@ -1,3 +1,11 @@
+/*
+ *  Old code for retrieving CWL data,
+ *  deprecated because the Supercell API does not support historical war data.
+ *  Only works for current season wars.
+ *
+ *  Most of this code is being refactored
+ */
+
 const cocApiClient = require("./cocApiClient");
 const { transformTag, standardizeTag } = require("../utils/tagUtils");
 
@@ -78,31 +86,12 @@ class CocDataProcessor {
           name: clan.name,
           clanLevel: clan.clanLevel,
           badgeUrls: clan.badgeUrls,
-
-          results: {
-            wins: 0,
-            losses: 0,
-            draws: 0,
-            gainedStars: 0, //stars gained by attacking
-            bonusStars: 0, //stars gained by winning wars
-            totalStars: 0,
-            totalPercentage: 0, //can be multiplied later with the numbers of players of a war (for a single clan) to show the same statistic shown in the game
-            clanPosition: null,
-          },
+          results: null, //to be filled later
         };
 
-        //gets the wars results for the clan
         const warResults = await this.getWarsResults(clanData.tag, season);
 
-        clanData.results.wins = warResults.wins;
-        clanData.results.losses = warResults.losses;
-        clanData.results.draws = warResults.draws;
-
-        clanData.results.gainedStars = warResults.gainedStars;
-        clanData.results.bonusStars = warResults.wins * 10;
-        clanData.results.totalStars = warResults.gainedStars + clanData.results.bonusStars;
-        clanData.results.totalPercentage = warResults.totalPercentage;
-
+        clanData.results = warResults;
         //adds the clanData to the cwlMainData
         cwlMainData.clans.push(clanData);
       }
@@ -176,8 +165,9 @@ class CocDataProcessor {
           roundNumber: roundIndex + 1,
 
           warTags: round.warTags
-            // --- PASSAGGIO 1: ESTRAZIONE ---
-            // Controlliamo se l'elemento è un oggetto (nuovo JSON) o una stringa (vecchio JSON o "#0")
+
+            // NEW CODE TO HANDLE BOTH OLD AND NEW JSON FORMATS
+            // Checks if the element is an object (new JSON) or a string (old JSON or "#0")
             .map((warEntry) => {
               if (warEntry && typeof warEntry === "object") {
                 // Nel nuovo JSON il tag sta dentro la proprietà .tag
@@ -186,11 +176,7 @@ class CocDataProcessor {
               // Se è già una stringa (es. "#0" o vecchio formato), lo ritorniamo così com'è
               return warEntry;
             })
-            // --- PASSAGGIO 2: FILTRO ---
-            // Ora abbiamo un array di stringhe o null, possiamo filtrare
             .filter((tagString) => tagString && tagString !== "#0")
-            // --- PASSAGGIO 3: STANDARDIZZAZIONE ---
-            // Rimuoviamo il "#" usando la tua utility
             .map((tagString) => standardizeTag(tagString)),
 
           /*
@@ -234,11 +220,18 @@ class CocDataProcessor {
 
           //O(1) lookup using object
           let war;
+
+          //console.log("Checking war tag:", warTag);
+
           if (this.warCache[warTag]) {
             war = this.warCache[warTag];
           } else {
-            war = await cocApiClient.getWarData(warTag);
+            //BUG: getWarData only returns current season wars data, does not work for past seasons
+            //renamed to getCurrentCWLSeasonWarData
+            war = await cocApiClient.getCurrentCWLSeasonWarData(warTag);
             this.warCache[warTag] = war;
+
+            //console.log(this.warCache[warTag]);
           }
 
           /*
@@ -247,11 +240,12 @@ class CocDataProcessor {
           if (cachedWar !== undefined) {
             war = cachedWar.war;
           } else {
-            war = await cocApiClient.getWarData(warTag);
+            war = await cocApiClient.getCurrentCWLSeasonWarData(warTag);
             this.warCache.push({ warTag, war });
           }*/
 
           //if clanTag is found inside the war, the data of the war is saved in correctClanWars
+
           if (war.clan.tag === clanTagToMatch || war.opponent.tag === clanTagToMatch) {
             //creates an object that contains the correct war data and the war tag
             let warData = {
@@ -283,8 +277,6 @@ class CocDataProcessor {
       clanPosition: null,
     };
 
-    //TODO: implement wins, losses, draws calculation
-
     let wars = await this.warFilter(stdTag, season);
     //console.log("Filtered wars for clan " + clanTag + ": ", wars);
 
@@ -293,23 +285,41 @@ class CocDataProcessor {
       let warData = wars[i];
       let clanTagToMatch = "#" + stdTag;
 
-      const correctWar = this.getClanFromCorrectSide(warData, clanTagToMatch);
-
-      //checks if the correctWar exists
-      if (correctWar) {
-        results.gainedStars += correctWar.stars;
-        results.totalPercentage += correctWar.destructionPercentage;
-
-        // Esempio calcolo wins/loss (opzionale da implementare)
-        // if(correctWar.stars > opponent.stars) results.wins++;
-
-        //FINIRE
-        //results.wins = results.wins += ;
-        //results.losses = results.losses +=;
-        //results.draws = results.draws +=;
+      // Identify our clan and the opponent clan
+      let myClan, opponentClan;
+      if (warData.war.clan.tag === clanTagToMatch) {
+        myClan = warData.war.clan;
+        opponentClan = warData.war.opponent;
+      } else {
+        myClan = warData.war.opponent;
+        opponentClan = warData.war.clan;
       }
-      console.log(correctWar);
+
+      // Aggregate Stats
+      results.gainedStars += myClan.stars;
+      results.totalPercentage += myClan.destructionPercentage;
+
+      // Calculate Win/Loss/Draw
+      if (myClan.stars > opponentClan.stars) {
+        results.wins++;
+      } else if (myClan.stars < opponentClan.stars) {
+        results.losses++;
+      } else {
+        // Stars are equal, check destruction percentage
+        if (myClan.destructionPercentage > opponentClan.destructionPercentage) {
+          results.wins++;
+        } else if (myClan.destructionPercentage < opponentClan.destructionPercentage) {
+          results.losses++;
+        } else {
+          // Perfect draw
+          results.draws++;
+        }
+      }
     }
+    //calculate final results for clan
+    results.bonusStars = results.wins * 10;
+    results.totalStars = results.gainedStars + results.bonusStars;
+
     return results;
   }
 
@@ -386,7 +396,7 @@ class CocDataProcessor {
     return clanMembers;
   }
 
-  //helper funtions for saveMembersData
+  //=====Helper functions=====
   //returns the members array from the correct side of the war
   getMembersFromCorrectSide(warData, clanTagToMatch) {
     const correctClan = this.getClanFromCorrectSide(warData, clanTagToMatch);

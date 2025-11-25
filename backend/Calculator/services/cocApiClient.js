@@ -70,8 +70,8 @@ class CocApiClient {
   }
 
   //uses the official COC API
-  //return the war data of the inputted war tag
-  async getWarData(warTag) {
+  //returns the CWL war data of the inputted war tag (onlu current season)
+  async getCurrentCWLSeasonWarData(warTag) {
     try {
       let response = await officialCocClient.get(`/clanwarleagues/wars/${transformTag(warTag)}`);
       let warData = response.data;

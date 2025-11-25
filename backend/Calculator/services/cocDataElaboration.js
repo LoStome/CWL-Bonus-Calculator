@@ -5,38 +5,66 @@ const { transformTag, standardizeTag } = require("../utils/tagUtils");
 
 class CocDataProcessor {
   constructor() {
-    this.cwlData = null; // Cache per i dati del gruppo (season)
+    //object to cache different seasons
+    //Structure: { "2024-01": { ...data... }, "2024-02": { ...data... } }
+    this.cwlDataCache = {}; // Cache per i dati del gruppo (season)
 
     this.warCache = {}; // key: warTag, value: warData
-    //this.warCache = [];
+    //this.warCache = []; //keeping this for the other version with array
   }
 
   //helper function to cache the CWL data for multiple calls
-  async _ensureLeagueGroupData(clanTag) {
+  async _ensureLeagueGroupData(clanTag, season) {
     const stdTag = standardizeTag(clanTag);
 
-    // 1. checks if there is cached data
-    if (this.cwlData) {
-      // 2. searches if the requested clan is present in the 'clans' array of the cached data
-      // The CWL group API returns 8 clans. If the requested tag is one of these,
-      // then the data we have is valid for it.
-      const isClanInCache = this.cwlData.data.clans.some((c) => c.tag === stdTag);
+    // 1. Checks if there is cached data for the requested season
+    if (this.cwlDataCache[season]) {
+      const cachedSeasonData = this.cwlDataCache[season];
 
-      if (isClanInCache) {
-        return this.cwlData;
+      //checks if the cached data is for the requested clan
+      if (cachedSeasonData.data && cachedSeasonData.data.clans) {
+        // 2. searches if the requested clan is present in the 'clans' array of the cached data
+        const isClanInCache = cachedSeasonData.data.clans.some((c) => c.tag === clanTag);
+
+        if (isClanInCache) {
+          return this.cwlData;
+        }
       }
     }
-    //3. If not, fetch new data from the API
-    //console.log(`Fetching NEW API data for ${stdTag}`);
-    const response = await cocApiClient.getCurrentCWLSeasonData(stdTag);
-    this.cwlData = response;
-    return this.cwlData;
+
+    try {
+      //3. If not, fetch new data from the API
+      //console.log(`Fetching NEW API data for ${stdTag}`);
+      const response = await cocApiClient.getCWLSeasonData(stdTag, season);
+      //console.log("CWL Season Data from ClashKing API:", response);
+
+      if (!response) {
+        console.warn(
+          `CWL Data not found for ${stdTag} in season ${season}. Returning 'noSeasonData'.`
+        );
+        // fake data structure to indicate no season data
+        return { state: "noSeasonData" };
+      }
+      // 4. Save to cache specifically for this season
+      this.cwlDataCache[season] = response;
+      return response;
+    } catch (error) {
+      // 5. Gestione errori reali (es. API down, timeout, errori di rete)
+      console.error(`Error fetching CWL data for ${stdTag}:`, error.message);
+
+      return { state: "error", message: error.message };
+    }
   }
 
-  async getCurrentCWLSeasonMainData(clanTag) {
+  async getCWLSeasonMainData(clanTag, season) {
     try {
-      let { data: cwlData } = await this._ensureLeagueGroupData(clanTag);
+      let cwlData = await this._ensureLeagueGroupData(clanTag, season);
       //console.log("CWL Data: ", cwlData);
+
+      if (cwlData.state === "noSeasonData" || cwlData.state === "error") {
+        // Puoi decidere se ritornare null o l'oggetto errore
+        throw new Error(cwlData.message || "No season data available");
+      }
 
       let cwlMainData = {
         state: cwlData.state,
@@ -51,23 +79,28 @@ class CocDataProcessor {
           clanLevel: clan.clanLevel,
           badgeUrls: clan.badgeUrls,
 
-          //total stars and total percentage are broken (to do: fix))
           results: {
             wins: 0,
             losses: 0,
             draws: 0,
+            gainedStars: 0, //stars gained by attacking
+            bonusStars: 0, //stars gained by winning wars
             totalStars: 0,
-            totalPercentage: 0,
+            totalPercentage: 0, //can be multiplied later with the numbers of players of a war (for a single clan) to show the same statistic shown in the game
             clanPosition: null,
           },
         };
 
         //gets the wars results for the clan
-        const warResults = await this.getWarsResults(clanData.tag);
+        const warResults = await this.getWarsResults(clanData.tag, season);
+
         clanData.results.wins = warResults.wins;
         clanData.results.losses = warResults.losses;
         clanData.results.draws = warResults.draws;
-        clanData.results.totalStars = warResults.totalStars;
+
+        clanData.results.gainedStars = warResults.gainedStars;
+        clanData.results.bonusStars = warResults.wins * 10;
+        clanData.results.totalStars = warResults.gainedStars + clanData.results.bonusStars;
         clanData.results.totalPercentage = warResults.totalPercentage;
 
         //adds the clanData to the cwlMainData
@@ -83,7 +116,7 @@ class CocDataProcessor {
     } catch (error) {
       console.error(error);
       throw new Error(
-        `Current CWL season main data elaboration error: ${
+        `CWL season main data elaboration error (${season}): ${
           error.response?.data?.message || error.message
         }`
       );
@@ -123,10 +156,17 @@ class CocDataProcessor {
     return cwlMainData;
   }
 
-  async getCurrentCWLSeasonWarTags(clanTag) {
+  async getCWLSeasonWarTags(clanTag, season) {
     try {
-      let { data: cwlData } = await this._ensureLeagueGroupData(clanTag);
+      let cwlData = await this._ensureLeagueGroupData(clanTag, season);
       //console.log("CWL Data: ", cwlData);
+
+      // Controllo sicurezza
+      if (!cwlData) {
+        throw new Error("CWL season data not available");
+      } else if (!cwlData.rounds) {
+        return [];
+      }
 
       let allWarTags = [];
 
@@ -136,31 +176,52 @@ class CocDataProcessor {
           roundNumber: roundIndex + 1,
 
           warTags: round.warTags
+            // --- PASSAGGIO 1: ESTRAZIONE ---
+            // Controlliamo se l'elemento è un oggetto (nuovo JSON) o una stringa (vecchio JSON o "#0")
+            .map((warEntry) => {
+              if (warEntry && typeof warEntry === "object") {
+                // Nel nuovo JSON il tag sta dentro la proprietà .tag
+                return warEntry.tag;
+              }
+              // Se è già una stringa (es. "#0" o vecchio formato), lo ritorniamo così com'è
+              return warEntry;
+            })
+            // --- PASSAGGIO 2: FILTRO ---
+            // Ora abbiamo un array di stringhe o null, possiamo filtrare
+            .filter((tagString) => tagString && tagString !== "#0")
+            // --- PASSAGGIO 3: STANDARDIZZAZIONE ---
+            // Rimuoviamo il "#" usando la tua utility
+            .map((tagString) => standardizeTag(tagString)),
 
+          /*
+            *old code
             //#0 are invalid war for CoC's api, so they are filtered out
-            //.filter((warTag) => warTag && warTag !== "#0")
+            .filter((warTag) => warTag && warTag !== "#0")
             .map((warTag) => standardizeTag(warTag)),
+            */
         };
 
+        //adds the roundData only if there are warTags inside
+        //in theory not needed because if the war do not exits they are not presents in the api call
+        //if (roundData.warTags.length > 0) {
         allWarTags.push(roundData);
+        //}
       });
       //console.log("all War Tags: ", allWarTags);
       return allWarTags;
     } catch (error) {
       console.error(error);
       throw new Error(
-        `Current CWL season war tags elaboration error: ${
-          error.response?.data?.message || error.message
-        }`
+        `CWL season war tags elaboration error: ${error.response?.data?.message || error.message}`
       );
     }
   }
 
   //filters all the wars of the CWL season to find the ones with the correspondent CLAN TAG
   //returns an array which contains the wars battled by the clan in the season
-  async warFilter(clanTag) {
+  async warFilter(clanTag, season) {
     let correctClanWars = [];
-    let allSeasonWarTags = await this.getCurrentCWLSeasonWarTags(clanTag);
+    let allSeasonWarTags = await this.getCWLSeasonWarTags(clanTag, season);
 
     try {
       let clanTagToMatch = "#" + clanTag;
@@ -209,20 +270,22 @@ class CocDataProcessor {
     return correctClanWars;
   }
 
-  async getWarsResults(clanTag) {
+  async getWarsResults(clanTag, season) {
     const stdTag = standardizeTag(clanTag);
     let results = {
       wins: 0,
       losses: 0,
       draws: 0,
+      gainedStars: 0,
+      bonusStars: 0,
       totalStars: 0,
       totalPercentage: 0,
       clanPosition: null,
     };
 
-    //todo: implement wins, losses, draws calculation
+    //TODO: implement wins, losses, draws calculation
 
-    let wars = await this.warFilter(stdTag);
+    let wars = await this.warFilter(stdTag, season);
     //console.log("Filtered wars for clan " + clanTag + ": ", wars);
 
     // calculates total stars and total percentage
@@ -232,14 +295,26 @@ class CocDataProcessor {
 
       const correctWar = this.getClanFromCorrectSide(warData, clanTagToMatch);
 
-      results.totalStars = results.totalStars += correctWar.stars;
-      results.totalPercentage = results.totalPercentage += correctWar.destructionPercentage;
+      //checks if the correctWar exists
+      if (correctWar) {
+        results.gainedStars += correctWar.stars;
+        results.totalPercentage += correctWar.destructionPercentage;
+
+        // Esempio calcolo wins/loss (opzionale da implementare)
+        // if(correctWar.stars > opponent.stars) results.wins++;
+
+        //FINIRE
+        //results.wins = results.wins += ;
+        //results.losses = results.losses +=;
+        //results.draws = results.draws +=;
+      }
+      console.log(correctWar);
     }
     return results;
   }
 
-  async saveMembersData(clanTag) {
-    let correctClanWars = await this.warFilter(clanTag);
+  async saveMembersData(clanTag, season) {
+    let correctClanWars = await this.warFilter(clanTag, season);
     let clanTagToMatch = "#" + clanTag;
     let clanMembers = [];
 

@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { cocDataElaboration, cocApiClient } = require("../");
+const { cocDataElaboration, playerDataProcessor, cocApiClient } = require("../");
 
 router.get("/test", (req, res) => {
   res.json({ ok: true, message: "CWL route attiva!" });
@@ -48,7 +48,7 @@ router.get("/getCWLSeasonPlayersData", async (req, res) => {
       });
     }
 
-    const playersData = await cocDataElaboration.saveMembersData(clanTag, season);
+    const playersData = await playerDataProcessor.saveMembersData(clanTag, season);
 
     //outputs the data structure as json
     res.json({

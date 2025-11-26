@@ -1,4 +1,3 @@
-// LIBRERIE
 require("dotenv").config();
 const axios = require("axios");
 
@@ -9,7 +8,7 @@ const COC_API_KEY = process.env.COC_API_TOKEN; //official CoC api
 const CLASHKING_BASE_URL = "https://api.clashk.ing";
 const OFFICIAL_COC_API_URL = "https://api.clashofclans.com/v1/";
 
-//INSTANZE API
+//API INSTANCES
 //OFFICIAL COC API
 const officialCocClient = axios.create({
   baseURL: OFFICIAL_COC_API_URL,
@@ -21,8 +20,8 @@ const officialCocClient = axios.create({
 });
 
 //CLASH KING API
-//IMPORTANTE!
-//CLASH KING NON USA '#' NEI TAG
+// IMPORTANT: CLASH KING DOES API CALLS WITHOUT THE '#' IN THE TAG
+// AND DOES NOT NEED TO BE ENCODED
 const clashKingClient = axios.create({
   baseURL: CLASHKING_BASE_URL,
   headers: {
@@ -30,7 +29,6 @@ const clashKingClient = axios.create({
     "User-Agent": "CWL Bonus Calculator (Discord: lo_stome)",
   },
 });
-//FINE INSTANZE API
 
 module.exports = {
   officialCocClient,

@@ -1,5 +1,4 @@
-//TO STRINGS
-
+//TO STRINGS FOR DEBUGGING PURPOSES
 /*
 //does not make sense to have
 //have to decide if i'm gonna delete this for cleaner code

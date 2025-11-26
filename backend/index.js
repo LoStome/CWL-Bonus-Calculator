@@ -10,7 +10,7 @@ app.use(express.json());
 
 // IMPORT SERVICES
 const cocApiClient = require("./Calculator/services/cocApiClient");
-const cocDataElaboration = require("./Calculator/services/cocDataElaboration");
+const cocDataElaboration = require("./Calculator/services/cocDataElaboration.old");
 
 // IMPORT UTILS
 const {
@@ -22,10 +22,7 @@ const {
 const { transformTag } = require("./Calculator/utils/tagUtils");
 
 // IMPORT API CONFIG
-const {
-  officialCocClient,
-  clashKingClient,
-} = require("./Calculator/config/api");
+const { officialCocClient, clashKingClient } = require("./Calculator/config/api");
 
 // EXPORT
 module.exports = {

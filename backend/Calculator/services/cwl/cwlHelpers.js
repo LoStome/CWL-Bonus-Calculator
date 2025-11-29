@@ -16,24 +16,29 @@ function warFilter(cwlData, clanTag) {
   }
 
   const stdClanTag = standardizeTag(clanTag);
+  //creates final total war array
   const myWars = [];
 
-  // Iteriamo su ogni round
+  // iterates on each round
   cwlData.rounds.forEach((round) => {
-    // Iteriamo su ogni guerra nel round
+    //iterates on each war of the round
     for (const warEntry of round.warTags) {
-      // NEW JSON SUPPORT: warEntry è un oggetto completo, non una stringa
+      //war entry is a complete object with all the war data in it
+      //now there's no need to call API to retrieve data like the previous version (main difference)
       if (warEntry && typeof warEntry === "object" && warEntry.tag !== "#0") {
         const clanA = standardizeTag(warEntry.clan.tag);
         const clanB = standardizeTag(warEntry.opponent.tag);
 
-        // Se il nostro clan è uno dei due partecipanti
+        // Schecks wheter the clan is one of the two participants in the war
         if (clanA === stdClanTag || clanB === stdClanTag) {
+          //saves the war object if present
           myWars.push({
             warTag: warEntry.tag,
-            war: warEntry, // Salviamo l'intero oggetto guerra già presente
+            war: warEntry,
           });
-          break; // Trovata la guerra del mio clan in questo round, passo al prossimo round
+
+          //if the war is found, immediatly skips to the next round to save time
+          break;
         }
       }
     }
@@ -60,26 +65,28 @@ function getWarsResults(cwlData, clanTag) {
   for (const warData of wars) {
     const myClan = getClanFromCorrectSide(warData.war, stdTag);
 
-    // Troviamo l'avversario per confrontare i punteggi
+    //finds the opp for the war to confront the scores
     const opponentTag =
       standardizeTag(warData.war.clan.tag) === stdTag ? warData.war.opponent : warData.war.clan;
 
-    // Somma statistiche
+    //defines stars and % for the war
     results.gainedStars += myClan.stars;
     results.totalPercentage += myClan.destructionPercentage;
 
-    // Calcolo Vittoria/Sconfitta
+    // Calculate Win/Loss/Draw
     if (myClan.stars > opponentTag.stars) {
       results.wins++;
     } else if (myClan.stars < opponentTag.stars) {
       results.losses++;
     } else {
+      // if stars are equal, check destruction percentage
       if (myClan.destructionPercentage > opponentTag.destructionPercentage) results.wins++;
       else if (myClan.destructionPercentage < opponentTag.destructionPercentage) results.losses++;
       else results.draws++;
     }
   }
 
+  //for each win 10 stars are assigned as a bonus
   results.bonusStars = results.wins * 10;
   results.totalStars = results.gainedStars + results.bonusStars;
 
@@ -87,18 +94,18 @@ function getWarsResults(cwlData, clanTag) {
 }
 
 function calculateClansPosition(cwlMainData) {
-  // 1. Creiamo un array ordinabile
+  //creates orderable arrays
   const sortedClans = [...cwlMainData.clans].sort((a, b) => {
-    // Ordina per stelle (decrescente)
+    //orders for the number of stars (decreasing order)
     if (b.results.totalStars !== a.results.totalStars) {
       return b.results.totalStars - a.results.totalStars;
     }
-    // Se stelle uguali, ordina per percentuale (decrescente)
+    //if the number of stars is the same, orders with percentage (decreasing order)
     return b.results.totalPercentage - a.results.totalPercentage;
   });
 
-  // 2. Assegniamo la posizione basata sull'indice nell'array ordinato
-  // Nota: Modifichiamo l'oggetto originale per riferimento
+  //assigns the position for each clan in the originally given data
+  //based on the sortedClans object
   sortedClans.forEach((clan, index) => {
     clan.results.clanPosition = index + 1;
   });
@@ -108,23 +115,25 @@ function calculateClansPosition(cwlMainData) {
 
 //====saveMembersData Helpers====
 
-// Formatta i dati degli attacchi per il singolo player
-function formatPlayerAttacks(member, warTag, warNumber) {
+//tweaks data attacks for each player
+function tweakPlayerAttacks(member, warTag, warNumber) {
+  // if there are no attacks for the war (the player has not attacked)
+  // an empty array is returned
   if (!member.attacks) return [];
 
   return member.attacks.map((attack) => ({
-    ...attack, // Copia proprietà esistenti (stars, destructionPercentage, etc.)
+    ...attack, //copies existings properties (stars, destructionPercentage, etc.)
+    //adds each war data to keep track of it
     warTag: warTag,
     warNumber: warNumber,
   }));
 }
 
 function getClanFromCorrectSide(warData, clanTagToMatch) {
-  // Nel nuovo JSON, warData è direttamente l'oggetto war
-  // Supportiamo sia se passiamo { war: ... } sia se passiamo l'oggetto war diretto
+  // Accepts either a { war: ... } structure or the war object directly.
   const war = warData.war || warData;
 
-  // Standardizziamo per sicurezza
+  // standardizes for security porpuses
   const matchTag = standardizeTag(clanTagToMatch);
   const clanTag = standardizeTag(war.clan.tag);
 
@@ -135,7 +144,7 @@ function getClanFromCorrectSide(warData, clanTagToMatch) {
   }
 }
 
-// Restituisce l'array dei membri dal lato corretto
+//returns the array of member of the correct clan
 function getMembersFromCorrectSide(warData, clanTagToMatch) {
   const correctClan = getClanFromCorrectSide(warData, clanTagToMatch);
   return correctClan.members;
@@ -145,7 +154,7 @@ module.exports = {
   warFilter,
   getWarsResults,
   calculateClansPosition,
-  formatPlayerAttacks,
+  tweakPlayerAttacks,
   getClanFromCorrectSide,
   getMembersFromCorrectSide,
 };

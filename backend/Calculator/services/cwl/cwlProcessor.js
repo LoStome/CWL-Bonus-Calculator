@@ -1,7 +1,4 @@
 //TODO:
-// confrontare la versione vecchia con quella nuova e per cercare del codice da riutilizzare
-// (renderlo piu' leggibile o cambiare alcune funzioni)
-// cambiare i commenti da italiano a inglese
 // controllare tutti gli import e exports, ottimizzarli e creare index.js
 
 const cocApiClient = require("./../cocApiClient");
@@ -10,7 +7,7 @@ const {
   warFilter,
   getWarsResults,
   calculateClansPosition,
-  formatPlayerAttacks,
+  tweakPlayerAttacks,
   getClanFromCorrectSide,
   getMembersFromCorrectSide,
 } = require("./cwlHelpers");
@@ -32,11 +29,13 @@ class cwlProcessor {
       const isClanInCache =
         cachedData.clans && cachedData.clans.some((c) => standardizeTag(c.tag) === stdTag);
 
+      //if data is found, already returns it
       if (isClanInCache) {
         return cachedData;
       }
     }
 
+    //only if data is not found
     try {
       //2. fetches from API
       const response = await cocApiClient.getCWLSeasonData(stdTag, season);
@@ -55,6 +54,7 @@ class cwlProcessor {
     }
   }
 
+  //refactors the data obtained from the api
   async getCWLSeasonMainData(clanTag, season) {
     try {
       const cwlData = await this._ensureLeagueGroupData(clanTag, season);
@@ -69,23 +69,24 @@ class cwlProcessor {
         clans: [],
       };
 
-      // Per ogni clan nel gruppo, calcoliamo le statistiche
+      // initializes the main data for each clan in the group
       for (let clan of cwlData.clans) {
         let clanData = {
           tag: clan.tag,
           name: clan.name,
           clanLevel: clan.clanLevel,
           badgeUrls: clan.badgeUrls,
-          results: null,
+          results: null, //filled later
         };
 
-        // Passiamo 'season' e il tag del clan corrente (non quello dell'utente principale)
-        const warResults = await getWarsResults(clanData.tag, season);
+        //getWarsResults receives the tag of the current clan, (not the main one)
+        //in this way we obtain the data of each clan's wars from their "perspective"
+        const warResults = await getWarsResults(cwlData, clanData.tag);
         clanData.results = warResults;
-
         cwlMainData.clans.push(clanData);
       }
 
+      //assigns the final position of each clan in results.clanPosition
       return calculateClansPosition(cwlMainData);
     } catch (error) {
       console.error(error);
@@ -101,20 +102,18 @@ class cwlProcessor {
     const correctClanWars = warFilter(cwlData, clanTag);
     const clanMembers = [];
     try {
-      // Iteriamo su tutte le guerre (rounds)
+      // iterates on each war/round/day
       correctClanWars.forEach((warData, index) => {
         const membersInWar = getMembersFromCorrectSide(warData.war, clanTag);
         const warCounter = index + 1;
 
         membersInWar.forEach((member) => {
-          // Cerchiamo se il player è già stato aggiunto all'array principale
+          // searches if player is already added to the player array
           let existingMember = clanMembers.find((m) => m.tag === member.tag);
 
-          // Formattiamo i nuovi attacchi di questa guerra
-          const formattedAttacks = formatPlayerAttacks(member, warData.warTag, warCounter);
-
           if (!existingMember) {
-            // Se è la prima volta che vediamo il player, creiamo l'oggetto
+            // if is the first time the player is found,
+            // the specific player object is created
             existingMember = {
               tag: member.tag,
               name: member.name,
@@ -123,14 +122,23 @@ class cwlProcessor {
               totalPlayerStars: 0,
               totalPlayerPercentage: 0,
               attacks: [],
+              /*
+              not planning to implemente defences for now
+              this is what is needed to implement them
+              //opponentAttacks: member.opponentAttacks || 0,
+              //bestOpponentAttack: member.bestOpponentAttack || null
+              */
             };
             clanMembers.push(existingMember);
           }
 
-          // Aggiungiamo gli attacchi e aggiorniamo le stats
+          // tweaks attacks data for this war
+          const formattedAttacks = tweakPlayerAttacks(member, warData.warTag, warCounter);
+
+          // adds the war data to the player object
           existingMember.attacks.push(...formattedAttacks);
 
-          // Aggiornamento contatori totali
+          // updates the total stars and % counters
           formattedAttacks.forEach((atk) => {
             existingMember.totalPlayerStars += atk.stars;
             existingMember.totalPlayerPercentage += atk.destructionPercentage;

@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { cocDataElaboration, playerDataProcessor, cocApiClient } = require("../");
+const { cwlProcessor } = require("../Calculator/services");
 
 router.get("/test", (req, res) => {
   res.json({ ok: true, message: "CWL route attiva!" });
@@ -20,7 +20,7 @@ router.get("/getCurrentCWLSeasonData", async (req, res) => {
       });
     }
 
-    const seasonData = await cocDataElaboration.getCurrentCWLSeasonMainData(clanTag);
+    const seasonData = await cwlProcessor.getCurrentCWLSeasonMainData(clanTag);
 
     //outputs the data structure as json
     res.json({
@@ -48,7 +48,7 @@ router.get("/getCWLSeasonPlayersData", async (req, res) => {
       });
     }
 
-    const playersData = await playerDataProcessor.saveMembersData(clanTag, season);
+    const playersData = await cwlProcessor.saveMembersData(clanTag, season);
 
     //outputs the data structure as json
     res.json({
@@ -88,7 +88,7 @@ router.get("/getCWLSeasonData", async (req, res) => {
       });
     }
 
-    const seasonData = await cocDataElaboration.getCWLSeasonMainData(clanTag, season);
+    const seasonData = await cwlProcessor.getCWLSeasonMainData(clanTag, season);
 
     //outputs the data structure as json
     res.json({

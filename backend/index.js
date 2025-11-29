@@ -9,34 +9,37 @@ app.use(cors());
 app.use(express.json());
 
 // IMPORT SERVICES
-const cocApiClient = require("./Calculator/services/cocApiClient");
-const cocDataElaboration = require("./Calculator/services/cocDataElaboration.old");
+const { cwlProcessor, cwlHelpers, cocApiClient } = require("./Calculator/services");
 
 // IMPORT UTILS
+
+const { transformTag } = require("./Calculator/utils/tagUtils");
+
+/* 
+// To strings are not supported anymore
 const {
   savedPlayerDataToString,
   //warTagsToString,
   correctClanWarsToString,
 } = require("./Calculator/utils/stringUtils");
-
-const { transformTag } = require("./Calculator/utils/tagUtils");
+*/
 
 // IMPORT API CONFIG
 const { officialCocClient, clashKingClient } = require("./Calculator/config/api");
 
 // EXPORT
-module.exports = {
-  savedPlayerDataToString,
+/*module.exports = {
+  //savedPlayerDataToString,
   //warTagsToString,
-  correctClanWarsToString,
+  //correctClanWarsToString,
   transformTag,
 
   officialCocClient,
   clashKingClient,
 
   cocApiClient,
-  cocDataElaboration,
-};
+  cwlProcessor,
+};*/
 
 // ===== ROUTES =====
 const routes = {

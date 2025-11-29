@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { cocDataElaboration, cocApiClient } = require("../");
+const { cwlProcessor, cocApiClient } = require("../Calculator/services");
 
 router.get("/test", (req, res) => {
   res.json({ ok: true, message: "PLAYER route attiva!" });

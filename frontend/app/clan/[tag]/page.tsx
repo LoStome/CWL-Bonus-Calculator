@@ -7,26 +7,52 @@ import { ClanData } from "@/components/clan/clan";
 import { ClanHeader } from "@/components/clan/";
 import { CwlCurrentSeasonCard } from "@/components/cwl/";
 
+// Funzione per ottenere YYYY-MM
+function getCurrentSeasonId(): string {
+  const date = new Date();
+  const year = date.getFullYear();
+  // getMonth() parte da 0 (Gennaio = 0), quindi aggiungiamo 1.
+  // padStart(2, '0') assicura che "5" diventi "05"
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  //console.log(`${year}-${month}`);
+  //return `${year}-11`;
+  return `${year}-${month}`;
+}
+
 export default function ClanPage() {
   const params = useParams();
   const tag = params.tag as string;
+
   const [clanData, setClanData] = useState<ClanData | null>(null);
+  const [cwlData, setCwlData] = useState<any | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchClanData = async () => {
       try {
-        const response = await fetch(`/api/clan/getClanData?clanTag=${tag}`);
+        const currentSeason = getCurrentSeasonId();
 
-        if (!response.ok) {
+        const clanResponse = await fetch(`/api/clan/getClanData?clanTag=${tag}`);
+        const cwlResponse = await fetch(
+          `/api/cwl/getCWLSeasonData?clanTag=${tag}&season=${currentSeason}`
+        );
+
+        if (!clanResponse.ok) {
           throw new Error("clan not found :(");
         }
-
-        const data = await response.json();
-
+        const clanJson = await clanResponse.json();
         //data.data because the backend returns: { ok: true, data: {...} }
-        setClanData(data.data);
+        setClanData(clanJson.data);
+
+        if (cwlResponse.ok) {
+          const cwlJson = await cwlResponse.json();
+          setCwlData(cwlJson.data);
+        } else {
+          console.warn("CWL data not found or API error");
+          setCwlData(null); // Il clan non è in lega o non ci sono dati
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {

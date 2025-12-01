@@ -11,7 +11,6 @@ export const CwlCurrentSeasonCard: React.FC<CwlSeasonCardProps> = ({}) => {
       {" "}
       <div className="flex items-center justify-between">
         <SectionTitle>Current CWL Season</SectionTitle>
-        text
       </div>
     </Card>
   );

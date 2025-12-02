@@ -1,1 +1,1 @@
-export { CwlCurrentSeasonCard } from "./CwlCurrentSeasonCard";
+export { CWLCurrentSeasonCard } from "./CWLCurrentSeasonCard";

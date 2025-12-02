@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 
 import { ClanData } from "@/components/clan/clan";
 import { ClanHeader } from "@/components/clan/";
-import { CwlCurrentSeasonCard } from "@/components/cwl/";
+import { CWLCurrentSeasonCard } from "@/components/cwl/";
 
 // Funzione per ottenere YYYY-MM
 function getCurrentSeasonId(): string {
@@ -15,8 +15,8 @@ function getCurrentSeasonId(): string {
   // padStart(2, '0') assicura che "5" diventi "05"
   const month = String(date.getMonth() + 1).padStart(2, "0");
   //console.log(`${year}-${month}`);
-  //return `${year}-11`;
-  return `${year}-${month}`;
+  return `${year}-11`;
+  //return `${year}-${month}`;
 }
 
 export default function ClanPage() {
@@ -89,7 +89,7 @@ export default function ClanPage() {
 
         <div></div>
 
-        <CwlCurrentSeasonCard></CwlCurrentSeasonCard>
+        <CWLCurrentSeasonCard data={cwlData} />
       </div>
     </div>
   );

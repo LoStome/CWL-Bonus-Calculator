@@ -87,8 +87,6 @@ export default function ClanPage() {
         <ClanHeader clanData={clanData!} />
         {/*Type Assertion: Uses to tell js that the data is never null | if not done an error is shown in VScode*/}
 
-        <div></div>
-
         <CWLCurrentSeasonCard data={cwlData} clanTag={tag} />
       </div>
     </div>

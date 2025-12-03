@@ -17,15 +17,16 @@ export const ClanHeader: React.FC<ClanHeaderProps> = ({ clanData, title = "Clan 
 
   return (
     <Card>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="clash-style-text text-amber-200 text-4xl font-bold ">{clanData.name}</h1>
-          <p className="text-gray-300 clash-style-text-small mt-1">{clanData.tag}</p>
+      <div className="mb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="clash-style-text text-amber-200 text-4xl font-bold ">{clanData.name}</h1>
+            <p className="text-gray-300 clash-style-text-small mt-1">{clanData.tag}</p>
+          </div>
+          <ClanBadge size={badgeSize} badgeUrls={clanData.badgeUrls} />
         </div>
-        <ClanBadge size={badgeSize} badgeUrls={clanData.badgeUrls} />
+        <ClanDescription description={clanData.description} />
       </div>
-      <ClanDescription description={clanData.description} />
-
       <SectionTitle className="text-center">{title}</SectionTitle>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ClanInfoSection clanData={clanData} />

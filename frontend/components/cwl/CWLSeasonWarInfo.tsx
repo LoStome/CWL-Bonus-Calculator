@@ -10,8 +10,8 @@ export const CWLSeasonWarInfo = ({ clanData }: CWLSeasonWarInfoProps) => {
   return (
 
     <div><p>Position: {clanData.results.clanPosition}</p>
-    <p>Total stars{clanData.results.totalStars}</p>
-    <p>Total percentage: {clanData.results.totalPercentage.toFixed(2)}%</p>
+    <p>Total stars:{clanData.results.totalStars}</p>
+    <p>Total percentage: {clanData.results.totalPercentage.toFixed(2)}%/700%</p>
     </div>
     
   );

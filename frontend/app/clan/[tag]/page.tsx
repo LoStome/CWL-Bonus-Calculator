@@ -89,7 +89,7 @@ export default function ClanPage() {
 
         <div></div>
 
-        <CWLCurrentSeasonCard data={cwlData} />
+        <CWLCurrentSeasonCard data={cwlData} clanTag={tag} />
       </div>
     </div>
   );

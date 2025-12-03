@@ -6,11 +6,24 @@ import { CWLSeasonHeader } from "./CWLSeasonHeader";
 
 interface CWLCurrentSeasonCardProps {
   data: CWLSeasonData;
+  clanTag: string;
 }
 
+
+
 export const CWLCurrentSeasonCard: React.FC<CWLCurrentSeasonCardProps> = ({
-  data,
+  data, clanTag
 }: CWLCurrentSeasonCardProps) => {
+
+  
+  const formattedClanTag = clanTag.startsWith("#") ? clanTag : `#${clanTag}`;
+
+  const clanData = data.clans.find((clan) => clan.tag === formattedClanTag);
+
+  console.log(clanData)
+
+
+  
   // data contains: { state, season, clans: [...] }
 
   return (
@@ -20,7 +33,7 @@ export const CWLCurrentSeasonCard: React.FC<CWLCurrentSeasonCardProps> = ({
         <SectionTitle>Current CWL Season</SectionTitle>
 
         <CWLSeasonHeader season={data.season} state={data.state} />
-        <CWLSeasonWarInfo clans={data.clans} />
+        <CWLSeasonWarInfo clanData={clanData!} />
       </div>
     </Card>
   );

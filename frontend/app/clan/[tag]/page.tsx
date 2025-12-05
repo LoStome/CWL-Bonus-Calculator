@@ -14,9 +14,10 @@ function getCurrentSeasonId(): string {
   // getMonth() parte da 0 (Gennaio = 0), quindi aggiungiamo 1.
   // padStart(2, '0') assicura che "5" diventi "05"
   const month = String(date.getMonth() + 1).padStart(2, "0");
+
   //console.log(`${year}-${month}`);
-  return `${year}-11`;
-  //return `${year}-${month}`;
+  //return `${year}-11`;
+  return `${year}-${month}`;
 }
 
 export default function ClanPage() {
@@ -29,15 +30,28 @@ export default function ClanPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  //probabilmente lo usero' in futuro per vedere se usare i dati correnti o storici
+  const date = new Date();
+  const day = date.getDate();
+  console.log(day);
+
   useEffect(() => {
     const fetchClanData = async () => {
       try {
-        const currentSeason = getCurrentSeasonId();
-
         const clanResponse = await fetch(`/api/clan/getClanData?clanTag=${tag}`);
-        const cwlResponse = await fetch(
-          `/api/cwl/getCWLSeasonData?clanTag=${tag}&season=${currentSeason}`
-        );
+        let currentSeasonHis;
+        let cwlResponse;
+
+        if (day < 15) {
+          // logic for current data
+          cwlResponse = await fetch(`/api/cwl/getCurrentCWLSeasonData?clanTag=${tag}`);
+        } else {
+          // logic per historical data
+          currentSeasonHis = getCurrentSeasonId();
+          cwlResponse = await fetch(
+            `/api/cwl/getCWLSeasonData?clanTag=${tag}&season=${currentSeasonHis}`
+          );
+        }
 
         if (!clanResponse.ok) {
           throw new Error("clan not found :(");

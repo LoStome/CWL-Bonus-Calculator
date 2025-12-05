@@ -41,21 +41,6 @@ class CocApiClient {
   }
 
   //Uses ClashKingAPI
-  //this API calls returns all the concurrent CWL season Data
-  //unused for now, deprecating
-  async getCurrentCWLSeasonData(clanTag) {
-    try {
-      let response = await clashKingClient.get(`/cwl/${standardizeTag(clanTag)}/group`);
-      return response.data;
-    } catch (error) {
-      console.error(error);
-      throw new Error(
-        `CWL ClashKing API request error: ${error.response?.data?.message || error.message}`
-      );
-    }
-  }
-
-  //Uses ClashKingAPI
   //this API calls returns all the season CWL season Data of the inputted season
   async getCWLSeasonData(clanTag, season) {
     try {
@@ -69,7 +54,23 @@ class CocApiClient {
     }
   }
 
-  //uses the official COC API
+  //Uses the official COC API
+  //this API calls returns all the concurrent CWL season Data
+  async getCurrentCWLSeasonData(clanTag) {
+    try {
+      let response = await officialCocClient.get(
+        `/clans/${transformTag(clanTag)}/currentwar/leaguegroup`
+      );
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(
+        `CWL ClashKing API request error: ${error.response?.data?.message || error.message}`
+      );
+    }
+  }
+
+  //uses
   //returns the CWL war data of the inputted war tag (onlu current season)
   async getCurrentCWLSeasonWarData(warTag) {
     try {

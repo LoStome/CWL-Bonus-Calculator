@@ -2,13 +2,13 @@
 const express = require("express");
 const router = express.Router();
 
-const { cwlProcessor } = require("../Calculator/services");
+const { cwlProcessor, currentCWLProcessor } = require("../Calculator/services");
 
 router.get("/test", (req, res) => {
   res.json({ ok: true, message: "CWL route attiva!" });
 });
 
-//returns the data from getCurrentCWLSeasonMainData(clanTag)
+//returns the data from getCWLSeasonMainData(clanTag)
 router.get("/getCurrentCWLSeasonData", async (req, res) => {
   try {
     const { clanTag } = req.query;
@@ -20,7 +20,7 @@ router.get("/getCurrentCWLSeasonData", async (req, res) => {
       });
     }
 
-    const seasonData = await cwlProcessor.getCurrentCWLSeasonMainData(clanTag);
+    const seasonData = await currentCWLProcessor.getCWLSeasonMainData(clanTag);
 
     //outputs the data structure as json
     res.json({

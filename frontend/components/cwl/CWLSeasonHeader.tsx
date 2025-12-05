@@ -4,7 +4,8 @@ interface CwlHeaderProps {
 }
 
 export const CWLSeasonHeader = ({ season, state }: CwlHeaderProps) => {
-  
+  if (state === "inWar") state = "in War";
+
   return (
     <div className="flex justify-between items-center">
       <h3 className="text-xl font-bold text-gray-800"> {season} season</h3>
